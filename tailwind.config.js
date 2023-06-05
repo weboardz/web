@@ -13,7 +13,7 @@ module.exports = {
       },
 
       colors: {
-        "Black Haze": {
+        BlackHaze: {
           50: "#f8fafc",
           100: "#e9eff5",
           200: "#cedde9",
@@ -65,7 +65,7 @@ module.exports = {
           900: "#7c4d12",
           950: "#432807",
         },
-        "Island Spice": {
+        IslandSpice: {
           50: "#fffbeb",
           100: "#fef3c7",
           200: "#fde68a",
@@ -91,7 +91,7 @@ module.exports = {
           900: "#145327",
           950: "#052e12",
         },
-        "Aqua Spring": {
+        AquaSpring: {
           50: "#f0fdfa",
           100: "#ccfbf0",
           200: "#99f6e1",
@@ -104,7 +104,7 @@ module.exports = {
           900: "#134e40",
           950: "#042f25",
         },
-        "Alice Blue": {
+        AliceBlue: {
           50: "#f0f9ff",
           100: "#e0f2fe",
           200: "#bae2fd",
@@ -130,7 +130,7 @@ module.exports = {
           900: "#311d95",
           950: "#1e1065",
         },
-        "Wisp Pink": {
+        WispPink: {
           50: "#fdf2f8",
           100: "#fce7f2",
           200: "#fbcfe7",
@@ -146,5 +146,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/forms")],
 };
