@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <body
         className={`${roboto.className} ${rubik.className} flex h-screen min-h-[700px] min-w-fit flex-col items-center px-4 py-8 sm:p-14`}
       >
