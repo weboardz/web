@@ -1,4 +1,6 @@
+import BlurBackground from "@/assets/blur-background.svg";
 import { Roboto_Flex, Rubik } from "next/font/google";
+import Image from "next/image";
 import "./globals.css";
 
 const roboto = Roboto_Flex({ subsets: ["latin"], variable: "--font-roboto" });
@@ -16,7 +18,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${roboto.className} ${rubik.className} p-14`}>
+      <body
+        className={`${roboto.className} ${rubik.className} flex h-screen flex-col items-center p-14`}
+      >
+        <Image
+          alt=""
+          src={BlurBackground}
+          className="top-o absolute right-0 -z-10 max-h-[80%]"
+        />
         {children}
       </body>
     </html>
