@@ -19,9 +19,11 @@ const types = {
 
 const OAuthButton = ({
   type,
+  disabled = false,
 }: {
   type: keyof typeof types;
   key?: string | number;
+  disabled?: boolean;
 }) => {
   const { logo, bgColor, borderColor, textColor } = types[type];
   return (

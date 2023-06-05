@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ArrowLink,
   Input,
@@ -6,22 +8,54 @@ import {
   Submit,
 } from "@/components";
 
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+
 const SignIn = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = useCallback(
+    async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.currentTarget);
+      const data: { [index: string]: any } = {};
+      formData.forEach((value, key) => (data[key] = value));
+
+      const { email, password, rememberMe } = data;
+
+      setIsLoading(true);
+
+      try {
+        await axios.post("/api/auth/signin", { email, password, rememberMe });
+      } catch (error) {
+        alert("Cant sign in");
+      }
+    },
+    []
+  );
+
   return (
     <div className="flex w-3/5 min-w-min max-w-sm flex-col items-center gap-16">
-      <form action="#" className="flex w-full flex-col gap-8 font-alt">
+      <form
+        onSubmit={handleSubmit}
+        className="flex w-full flex-col gap-8 font-alt"
+      >
         <div className="flex flex-col gap-4">
           {inputFields.map((data, index) => (
             <Input key={index} {...{ ...data }} />
           ))}
 
           <label
-            htmlFor="checkbox"
+            htmlFor="rememberMe"
             className="flex items-center gap-2 font-medium text-Alabaster-300"
           >
             <input
-              id="checkbox"
+              id="rememberMe"
               type="checkbox"
+              name="rememberMe"
               className="h-5 w-5 cursor-pointer rounded-md border-2 border-Alabaster-200 text-AliceBlue-400"
             />
             Remember me
@@ -38,8 +72,8 @@ const SignIn = () => {
         </div>
 
         <div className="flex flex-col gap-4">
-          <OAuthButton type="Google" />
-          <OAuthButton type="GitHub" />
+          <OAuthButton type="Google" disabled />
+          <OAuthButton type="GitHub" disabled />
         </div>
       </form>
 
@@ -65,5 +99,7 @@ const inputFields: InputProps[] = [
     icon: "lock",
     placeholder: "password",
     type: "password",
+    minLength: 8,
+    maxLength: 16,
   },
 ];

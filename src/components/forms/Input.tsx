@@ -16,6 +16,9 @@ export type InputProps = {
   placeholder: string;
   required?: boolean;
   disabled?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
 };
 
 const Input = ({
@@ -25,6 +28,9 @@ const Input = ({
   placeholder,
   required = true,
   disabled = false,
+  minLength,
+  maxLength,
+  onChange,
 }: InputProps) => {
   return (
     <label
@@ -36,7 +42,7 @@ const Input = ({
       {React.cloneElement(icons[icon], { color: "#859BAB" })}
       <input
         id={name}
-        {...{ type, placeholder, required, disabled }}
+        {...{ type, name, placeholder, required, disabled, minLength, maxLength, onChange }}
         className="text-md border-none bg-transparent p-0 text-Alabaster-800 outline-none placeholder:text-Alabaster-200 focus:ring-0"
       />
     </label>
