@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${roboto.className} ${rubik.className} flex h-screen flex-col items-center p-14`}
+        className={`${roboto.className} ${rubik.className} flex h-screen min-h-[700px] min-w-fit flex-col items-center px-4 py-8 sm:p-14`}
       >
         <Image
           alt=""
