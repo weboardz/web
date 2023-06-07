@@ -7,7 +7,7 @@ import {
   OAuthButton,
   Submit,
 } from "@/components";
-
+import { convertFormDataToObject } from "@/lib";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -20,21 +20,21 @@ const SignIn = () => {
     async (e) => {
       e.preventDefault();
 
-      const formData = new FormData(e.currentTarget);
-      const data: { [index: string]: any } = {};
-      formData.forEach((value, key) => (data[key] = value));
-
-      const { email, password, rememberMe } = data;
+      const { email, password, rememberMe } = convertFormDataToObject(
+        new FormData(e.currentTarget)
+      );
 
       setIsLoading(true);
 
       try {
         await axios.post("/api/auth/signin", { email, password, rememberMe });
+        router.push("/home");
       } catch (error) {
-        alert("Cant sign in");
+        alert("Could not Sign In");
+        setIsLoading(false);
       }
     },
-    []
+    [router]
   );
 
   return (
@@ -45,7 +45,7 @@ const SignIn = () => {
       >
         <div className="flex flex-col gap-4">
           {inputFields.map((data, index) => (
-            <Input key={index} {...{ ...data }} />
+            <Input key={index} {...{ ...data }} disabled={isLoading} />
           ))}
 
           <label
@@ -56,13 +56,14 @@ const SignIn = () => {
               id="rememberMe"
               type="checkbox"
               name="rememberMe"
+              disabled={isLoading}
               className="h-5 w-5 cursor-pointer rounded-md border-2 border-Alabaster-200 text-AliceBlue-400"
             />
             Remember me
           </label>
         </div>
 
-        <Submit value="Sign In" />
+        <Submit value="Sign In" disabled={isLoading} />
 
         <div className="relative flex items-center justify-center">
           <div className="h-[2px] w-full bg-Alabaster-200" />
@@ -72,8 +73,8 @@ const SignIn = () => {
         </div>
 
         <div className="flex flex-col gap-4">
-          <OAuthButton type="Google" disabled />
-          <OAuthButton type="GitHub" disabled />
+          <OAuthButton type="Google" disabled={isLoading} />
+          <OAuthButton type="GitHub" disabled={isLoading} />
         </div>
       </form>
 

@@ -1,25 +1,24 @@
 import { api } from "@/lib";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-export async function POST(req: NextRequest, res: NextResponse) {
-  const { email, password, rememberMe } = await req.json();
+const POST = async (request: NextRequest) => {
+  const { email, password, rememberMe } = await request.json();
 
   try {
-    const { data: credentials } = await api.post("/auth/signin", {
-      email,
-      password,
-    });
+    const {
+      data: { token },
+    } = await api.post<{ token: string }>("/auth/signin", { email, password });
 
-    console.log(credentials);
+    const expirationTime = rememberMe && 60 * 60 * 24; // 1 day
 
-    const expirationTimeInSeconds = 60 * 60 * 24; // 1 day
-
-    return NextResponse.redirect("http://localhost:5000/home", {
+    return new Response("", {
       headers: {
-        "Set-Cookie": `token=${credentials.token}; Path=/; max-age=${expirationTimeInSeconds};`,
+        "Set-Cookie": `token=${token}; Path=/; max-age=${expirationTime}`,
       },
     });
   } catch (error) {
-    console.log(error);
+    return new Response("Could not sign in", { status: 401 });
   }
-}
+};
+
+export { POST };

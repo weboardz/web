@@ -10,10 +10,12 @@ const icons = {
 
 export type InputProps = {
   key?: string | number;
+  inputRef?: React.RefObject<any>;
   name: string;
   icon: keyof typeof icons;
   type: React.HTMLInputTypeAttribute;
   placeholder: string;
+  invalid?: boolean;
   required?: boolean;
   disabled?: boolean;
   minLength?: number;
@@ -22,6 +24,7 @@ export type InputProps = {
 };
 
 const Input = ({
+  inputRef,
   name,
   icon,
   type,
@@ -35,14 +38,23 @@ const Input = ({
   return (
     <label
       htmlFor={name}
-      className={`flex h-14 w-full items-center gap-2 rounded-lg border-2 border-Alabaster-200 px-4 ${
-        disabled ? "bg-Alabaster-50" : "bg-white"
-      }`}
+      className={`flex h-14 w-full items-center gap-2 rounded-lg border-2 border-Alabaster-200 px-4
+      ${disabled ? "bg-Alabaster-50" : "bg-white"}`}
     >
-      {React.cloneElement(icons[icon], { color: "#859BAB" })}
+      {React.cloneElement(icons[icon], { color: "#859BAB " })}
       <input
         id={name}
-        {...{ type, name, placeholder, required, disabled, minLength, maxLength, onChange }}
+        ref={inputRef}
+        {...{
+          name,
+          type,
+          placeholder,
+          required,
+          disabled,
+          minLength,
+          maxLength,
+          onChange,
+        }}
         className="text-md border-none bg-transparent p-0 text-Alabaster-800 outline-none placeholder:text-Alabaster-200 focus:ring-0"
       />
     </label>

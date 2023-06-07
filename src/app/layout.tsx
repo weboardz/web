@@ -17,14 +17,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning={true}>
+    <html lang="en">
       <body
+        suppressHydrationWarning={true}
         className={`${roboto.className} ${rubik.className} flex h-screen min-h-[700px] min-w-fit flex-col items-center px-4 py-8 sm:p-14`}
       >
         <Image
           alt=""
           src={BlurBackground}
-          className="top-o absolute right-0 -z-10 max-h-[80%]"
+          className="top-o absolute right-0 -z-10 max-h-[80%] w-auto"
         />
         {children}
       </body>

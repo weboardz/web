@@ -1,59 +1,70 @@
 "use client";
 
 import { ArrowLink, Input, InputProps, Submit } from "@/components";
-import { api } from "@/lib";
+import { api, convertFormDataToObject } from "@/lib";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const passwordValue = useRef("");
+  const passwordRef = useRef<HTMLInputElement>();
+  const confirmPasswordRef = useRef<HTMLInputElement>();
+
+  const validatePassword: React.ChangeEventHandler<HTMLInputElement> =
+    useCallback((e) => {
+      const input = e.currentTarget;
+
+      const [currentPassword, currentConfirmPassword] = [
+        passwordRef.current,
+        confirmPasswordRef.current,
+      ];
+
+      if (currentPassword?.value !== currentConfirmPassword?.value) {
+        input.setCustomValidity("Passwords don't match");
+      } else {
+        currentPassword?.setCustomValidity("");
+        currentConfirmPassword?.setCustomValidity("");
+      }
+    }, []);
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
       e.preventDefault();
 
-      const formData = new FormData(e.currentTarget);
-      const data: { [index: string]: any } = {};
-      formData.forEach((value, key) => (data[key] = value));
+      const { name, email, password } = convertFormDataToObject(
+        new FormData(e.currentTarget)
+      );
 
       setIsLoading(true);
+
       try {
-        await api.post("/auth/signup", data);
+        await api.post("/auth/signup", { name, email, password });
         router.push("/signin");
       } catch (error) {
-        alert("ohhh nooooo!");
+        alert("Could not Sign Up");
         setIsLoading(false);
       }
     },
     [router]
   );
 
-  useEffect(() => {
-    inputFields.forEach((input) => {
-      switch (input.name) {
-        case "password":
-          input.onChange = (e) => {
-            passwordValue.current = e.currentTarget.value;
-          };
-          break;
-
-        case "confirmPassword":
-          input.onChange = (e) => {
-            const confirmPassword = e.currentTarget;
-            console.log(confirmPassword.value, passwordValue.current)
-            if (confirmPassword.value !== passwordValue.current) {
-              confirmPassword.setCustomValidity("Passwords don't match!");
-            } else {
-              confirmPassword.setCustomValidity("");
-            }
-          };
-          break;
-      }
-    });
-  }, []);
+  const inputExclusiveProps: {
+    [key: string]: {
+      onChange: React.ChangeEventHandler<HTMLInputElement>;
+      inputRef: React.MutableRefObject<HTMLInputElement | undefined>;
+    };
+  } = {
+    password: {
+      onChange: validatePassword,
+      inputRef: passwordRef,
+    },
+    confirmPassword: {
+      onChange: validatePassword,
+      inputRef: confirmPasswordRef,
+    },
+  };
 
   return (
     <div className="flex w-3/5 min-w-min max-w-sm flex-col items-center gap-16">
@@ -63,7 +74,15 @@ const SignUp = () => {
       >
         <div className="flex flex-col gap-4">
           {inputFields.map((data, index) => {
-            return <Input key={index} {...{ ...data }} disabled={isLoading} />;
+            return (
+              <Input
+                key={index}
+                {...{ ...data }}
+                disabled={isLoading}
+                inputRef={inputExclusiveProps[data.name]?.inputRef}
+                onChange={inputExclusiveProps[data.name]?.onChange}
+              />
+            );
           })}
         </div>
 
