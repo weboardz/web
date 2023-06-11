@@ -1,4 +1,12 @@
 import {
+  ApplicationAction,
+  ApplicationColor,
+  ToolBoxOption,
+  actionSelector,
+  colorPallete,
+} from "@/lib";
+
+import {
   Circle,
   Image as ImageIcon,
   MousePointer,
@@ -11,142 +19,13 @@ import {
 import { cloneElement } from "react";
 
 type ToolBoxProps = {
-  toolBoxSelection: string;
-  setToolBoxSelection: React.Dispatch<React.SetStateAction<string>>;
-  colorSelection: {
-    className: string;
-    hexCode: string;
-  };
-  setColorSelection: React.Dispatch<
-    React.SetStateAction<{
-      className: string;
-      hexCode: string;
-    }>
-  >;
+  action: ApplicationAction;
+  setAction: React.Dispatch<React.SetStateAction<ApplicationAction>>;
+  color: ApplicationColor;
+  setColor: React.Dispatch<React.SetStateAction<ApplicationColor>>;
 };
 
-const ToolBox = ({
-  toolBoxSelection,
-  setToolBoxSelection,
-  colorSelection,
-  setColorSelection,
-}: ToolBoxProps) => {
-  return (
-    <nav className="absolute left-1/2 top-14 flex -translate-x-1/2 items-center gap-4 rounded-md bg-Alabaster-50 px-3 py-2 opacity-50 shadow-md transition hover:scale-105 hover:opacity-100">
-      {buttonsProps.map(({ icon, name }) => {
-        return (
-          <button
-            key={name}
-            onClick={() => setToolBoxSelection(name)}
-            className={`group/button flex h-10 w-10 items-center justify-center rounded-md transition hover:scale-110 hover:bg-AliceBlue-100 hover:shadow-sm
-            ${toolBoxSelection === name && "bg-Alabaster-100"}`}
-          >
-            {cloneElement(icon, {
-              size: 25,
-              className:
-                "text-Alabaster-500 group-hover/button:text-AliceBlue-700",
-            })}
-          </button>
-        );
-      })}
-      <button className="group/button relative flex h-10 w-10 items-center justify-center rounded-md transition hover:scale-110 hover:bg-AliceBlue-100 hover:shadow-sm">
-        <Palette
-          size={25}
-          className="text-Alabaster-500 group-hover/button:text-AliceBlue-700"
-        />
-        <div
-          className={`absolute bottom-2 right-2 h-2 w-2 rounded-full ${colorSelection.className}`}
-        />
-        <ul className="absolute left-0 top-0 flex h-full w-full scale-0 transition-transform group-hover/button:scale-100">
-          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 flex-row-reverse items-center justify-between group-hover/button:-rotate-45">
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-Narvik-500",
-                  hexCode: "#22c554",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-Narvik-500 shadow-sm transition hover:translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-BlackHaze-900",
-                  hexCode: "#293e51",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-BlackHaze-900 shadow-sm transition hover:-translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-          </li>
-          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between group-hover/button:rotate-90">
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-IslandSpice-500",
-                  hexCode: "#f5c60b",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-IslandSpice-500 shadow-sm transition hover:-translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-WispPink-500",
-                  hexCode: "#ec48a1",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-WispPink-500 shadow-sm transition hover:translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-          </li>
-          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between group-hover/button:rotate-45">
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-Serenade-500",
-                  hexCode: "#f99416",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-Serenade-500 shadow-sm transition hover:-translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-Magnolia-500",
-                  hexCode: "#765cf6",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-Magnolia-500 shadow-sm transition hover:translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-          </li>
-          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between">
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-Chablis-500",
-                  hexCode: "#ef4444",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-Chablis-500 shadow-sm transition hover:-translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-            <div
-              onClick={() =>
-                setColorSelection({
-                  className: "bg-AliceBlue-500",
-                  hexCode: "#0e91e9",
-                })
-              }
-              className="h-7 w-7 rounded-full border-2 border-white bg-AliceBlue-500 shadow-sm transition hover:translate-x-2 hover:scale-125 hover:shadow-md"
-            />
-          </li>
-        </ul>
-      </button>
-    </nav>
-  );
-};
-
-export { ToolBox };
-
-const buttonsProps = [
+const toolBoxButtons: { name: ToolBoxOption; icon: JSX.Element }[] = [
   {
     name: "cursor",
     icon: <MousePointer />,
@@ -172,3 +51,109 @@ const buttonsProps = [
     icon: <ImageIcon />,
   },
 ];
+
+const ToolBox = ({ action, setAction, color, setColor }: ToolBoxProps) => {
+  return (
+    <nav className="absolute left-1/2 top-14 flex -translate-x-1/2 items-center gap-4 rounded-md bg-Alabaster-50 px-3 py-2 opacity-50 shadow-md transition hover:scale-105 hover:opacity-100">
+      {toolBoxButtons.map(({ icon, name }) => {
+        return (
+          <Button
+            key={name}
+            {...{ name, icon }}
+            isSelected={action.toolBoxSelection === name}
+            onClickHandler={(action: ApplicationAction) => setAction(action)}
+          />
+        );
+      })}
+
+      <Button icon={<Palette />} onClickHandler={() => {}} isSelected={false}>
+        <div
+          className="absolute bottom-2 right-2 h-2 w-2 rounded-full"
+          style={{ backgroundColor: color.main }}
+        />
+        <ul className="absolute left-0 top-0 flex h-full w-full scale-0 transition-transform group-hover/button:scale-100">
+          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 flex-row-reverse items-center justify-between group-hover/button:-rotate-45">
+            <ColorButton color="Narvik" onClickHandler={setColor} />
+            <ColorButton color="BlackHaze" onClickHandler={setColor} adjust />
+          </li>
+          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between group-hover/button:rotate-90">
+            <ColorButton color="IslandSpice" onClickHandler={setColor} adjust />
+            <ColorButton color="WispPink" onClickHandler={setColor} />
+          </li>
+          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between group-hover/button:rotate-45">
+            <ColorButton color="Serenade" onClickHandler={setColor} adjust />
+            <ColorButton color="Magnolia" onClickHandler={setColor} />
+          </li>
+          <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between">
+            <ColorButton color="Chablis" onClickHandler={setColor} adjust />
+            <ColorButton color="AliceBlue" onClickHandler={setColor} />
+          </li>
+        </ul>
+      </Button>
+    </nav>
+  );
+};
+
+export { ToolBox };
+
+const ColorButton = ({
+  color,
+  onClickHandler,
+  adjust = false,
+}: {
+  adjust?: boolean;
+  color: keyof typeof colorPallete;
+  onClickHandler(...args: any[]): void;
+}) => {
+  return (
+    <div
+      onClick={() => onClickHandler(colorPallete[color])}
+      className={`h-7 w-7 rounded-full border-2 border-white shadow-sm transition hover:scale-125 hover:shadow-md
+      ${adjust ? "hover:-translate-x-2" : "hover:translate-x-2"}
+      `}
+      style={{ backgroundColor: colorPallete[color].main }}
+    />
+  );
+};
+
+const Button = ({
+  name,
+  icon,
+  isSelected,
+  onClickHandler,
+  children,
+}: {
+  key?: string;
+  name?: ToolBoxOption;
+  icon: JSX.Element;
+  isSelected: boolean;
+  onClickHandler(...args: any[]): void;
+  children?: React.ReactNode;
+}) => {
+  return (
+    <button
+      onClick={() =>
+        onClickHandler(
+          isSelected
+            ? actionSelector.grab()
+            : name === "cursor"
+            ? actionSelector.select()
+            : actionSelector.create(name)
+        )
+      }
+      className="group/button relative flex h-10 w-10 items-center justify-center rounded-md transition hover:scale-110 hover:bg-AliceBlue-100 hover:shadow-sm"
+      style={{
+        backgroundColor: isSelected
+          ? colorPallete.Alabaster.lighter
+          : undefined,
+      }}
+    >
+      {cloneElement(icon, {
+        size: 25,
+        className: "text-Alabaster-500 group-hover/button:text-AliceBlue-700",
+      })}
+
+      {children}
+    </button>
+  );
+};
