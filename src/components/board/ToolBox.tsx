@@ -54,7 +54,7 @@ const toolBoxButtons: { name: ToolBoxOption; icon: JSX.Element }[] = [
 
 const ToolBox = ({ action, setAction, color, setColor }: ToolBoxProps) => {
   return (
-    <nav className="absolute left-1/2 top-14 flex -translate-x-1/2 items-center gap-4 rounded-md bg-Alabaster-50 px-3 py-2 opacity-50 shadow-md transition hover:scale-105 hover:opacity-100">
+    <nav className="absolute left-1/2 top-14 flex -translate-x-1/2 items-center gap-4 rounded-md bg-Alabaster-50 px-3 py-2 opacity-75 shadow-md transition hover:scale-105 hover:opacity-100">
       {toolBoxButtons.map(({ icon, name }) => {
         return (
           <Button

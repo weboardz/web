@@ -29,7 +29,7 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
   const [controls, setControls] = useState({ x: 0, y: 0, z: 1 });
   const [color, setColor] = useState<ApplicationColor>(colorPallete.AliceBlue);
   const [action, setAction] = useState<ApplicationAction>(
-    actionSelector.grab()
+    actionSelector.select()
   );
 
   const controlsHandler = useMemo(() => {
@@ -54,15 +54,12 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
 
   const grabActionHandler = useMemo(() => {
     const mouseDown = (id?: string) => setAction(actionSelector.grab(id));
-
-    const mouseUp = () => setAction(actionSelector.grab());
-
+    const mouseUp = () => setAction(actionSelector.select());
     const mouseMove = (mx: number, my: number, button: MouseButton) => {
       if (!action.targetId || (button !== "left" && button !== "wheel")) return;
       if (["board", "frame"].includes(action.targetId))
         controlsHandler.updatePosition(mx, my);
     };
-
     return { mouseDown, mouseUp, mouseMove };
   }, [action, controlsHandler]);
 
@@ -83,11 +80,12 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     (e) => {
       const { buttons: buttonIndex } = e;
       const pressedButton = buttons[buttonIndex];
-      if (pressedButton === "wheel") setAction(actionSelector.grab());
 
       const target = e.target as HTMLElement;
       const id = target.getAttribute("id") || undefined;
-      if (action.name === "grab") grabActionHandler.mouseDown(id);
+
+      if (action.name === "grab" || pressedButton === "wheel")
+        grabActionHandler.mouseDown(id);
     },
     [action, grabActionHandler]
   );
@@ -112,7 +110,7 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     >
       <div
         id="frame"
-        className="h-full w-full select-none bg-gray-100"
+        className="h-full w-full select-none bg-Serenade-50"
         style={{
           transform: `translate(${controls.x}px, ${controls.y}px) scale(${controls.z})`,
         }}
