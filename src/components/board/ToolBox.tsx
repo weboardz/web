@@ -4,7 +4,7 @@ import {
   ToolBoxOption,
   actionSelector,
   colorPallete,
-} from "@/lib";
+} from "@/application";
 
 import {
   Circle,
