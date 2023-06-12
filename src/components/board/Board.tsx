@@ -7,8 +7,10 @@ import {
   colorPallete,
 } from "@/lib";
 
-import { useCallback, useMemo, useState } from "react";
+import { Elements, createElement } from "@/lib";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolBox } from "./ToolBox";
+import { Shape } from "./elements/Shape";
 
 const [MIN_SCALE, MAX_SCALE, SCALE_FACTOR] = [0.6, 2, 1200];
 
@@ -32,7 +34,16 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     actionSelector.select()
   );
 
-  const controlsHandler = useMemo(() => {
+  const previousActionRef = useRef<ApplicationAction>(action);
+
+  useEffect(() => {
+    previousActionRef.current = action;
+  }, [action]);
+
+  const [elements, setElements] = useState<Elements[]>([]);
+  const [previewElement, setPreviewElement] = useState<Elements>();
+
+  const frameHandler = useMemo(() => {
     const updateScale: React.WheelEventHandler<HTMLElement> = (e) => {
       const amount = e.deltaY / SCALE_FACTOR;
       const isAtMinLimit = controls.z <= MIN_SCALE && amount < 0;
@@ -52,69 +63,164 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     return { updateScale, updatePosition };
   }, [controls]);
 
-  const grabActionHandler = useMemo(() => {
-    const mouseDown = (id?: string) => setAction(actionSelector.grab(id));
-    const mouseUp = () => setAction(actionSelector.select());
-    const mouseMove = (mx: number, my: number, button: MouseButton) => {
+  const grabHandler = useMemo(() => {
+    const grabElement = (id?: string) => setAction(actionSelector.grab(id));
+
+    const updateElementPosition = (
+      mx: number,
+      my: number,
+      button: MouseButton
+    ) => {
       if (!action.targetId || (button !== "left" && button !== "wheel")) return;
-      if (["board", "frame"].includes(action.targetId))
-        controlsHandler.updatePosition(mx, my);
+      if (action.targetId === "board" || action.targetId === "frame")
+        frameHandler.updatePosition(mx, my);
     };
-    return { mouseDown, mouseUp, mouseMove };
-  }, [action, controlsHandler]);
+
+    const releaseElement = () => setAction(actionSelector.select());
+
+    return { grabElement, updateElementPosition, releaseElement };
+  }, [action, frameHandler]);
+
+  const createHandler = useMemo(() => {
+    const calculateScaledPosition = (
+      clientPosition: number,
+      translation: number,
+      innerSize: number
+    ) => {
+      const middleSize = innerSize / 2;
+      const offsetSize = (innerSize * (1 / controls.z - 1)) / 2;
+      const correctedPosition = clientPosition - translation;
+      const scaleTransformation =
+        offsetSize * (1 - correctedPosition / middleSize);
+      return correctedPosition - scaleTransformation;
+    };
+
+    const createPreviewElement = (initialX: number, initialY: number) => {
+      if (!action.toolBoxSelection) return;
+
+      console.log(
+        calculateScaledPosition(initialY, controls.y, window.innerHeight)
+      );
+      setPreviewElement(
+        createElement[action.toolBoxSelection as string](
+          calculateScaledPosition(initialX, controls.x, window.innerWidth),
+          calculateScaledPosition(initialY, controls.y, window.innerHeight),
+          color
+        )
+      );
+    };
+
+    const updatePreviewElementSize = (mx: number, my: number) => {
+      if (!previewElement) return;
+      setPreviewElement({
+        ...previewElement,
+        size: {
+          width: Math.abs(previewElement.size.width + mx / controls.z),
+          height: Math.abs(previewElement.size.height + my / controls.z),
+        },
+      });
+    };
+
+    const savePreviewElement = () => {
+      if (!previewElement) return;
+      setElements([...elements, previewElement]);
+      setPreviewElement(undefined);
+    };
+
+    return {
+      createPreviewElement,
+      updatePreviewElementSize,
+      savePreviewElement,
+    };
+  }, [color, controls, elements, previewElement, action]);
+
+  const mouseDownHandler: React.MouseEventHandler<HTMLElement> = useCallback(
+    (e) => {
+      const { clientX: cx, clientY: cy, buttons: buttonIndex } = e;
+      const target = e.target as HTMLElement;
+      const pressedButton = buttons[buttonIndex];
+      const id = target.getAttribute("id") || undefined;
+
+      if (action.name === "grab" || pressedButton === "wheel")
+        grabHandler.grabElement(id);
+
+      if (action.name === "create") createHandler.createPreviewElement(cx, cy);
+    },
+    [action, grabHandler, createHandler]
+  );
 
   const mouseMoveHandler: React.MouseEventHandler<HTMLElement> = useCallback(
     (e) => {
       const { movementX: mx, movementY: my, buttons: buttonIndex } = e;
-
       const pressedButton = buttons[buttonIndex];
       if (pressedButton === "none") return;
 
       if (action.name === "grab")
-        grabActionHandler.mouseMove(mx, my, pressedButton);
+        grabHandler.updateElementPosition(mx, my, pressedButton);
+
+      if (action.name === "create")
+        createHandler.updatePreviewElementSize(mx, my);
     },
-    [action, grabActionHandler]
-  );
-
-  const mouseDownHandler: React.MouseEventHandler<HTMLElement> = useCallback(
-    (e) => {
-      const { buttons: buttonIndex } = e;
-      const pressedButton = buttons[buttonIndex];
-
-      const target = e.target as HTMLElement;
-      const id = target.getAttribute("id") || undefined;
-
-      if (action.name === "grab" || pressedButton === "wheel")
-        grabActionHandler.mouseDown(id);
-    },
-    [action, grabActionHandler]
+    [action, grabHandler, createHandler]
   );
 
   const mouseUpHandler: React.MouseEventHandler<HTMLElement> =
     useCallback(() => {
-      if (action.name === "grab") grabActionHandler.mouseUp();
-    }, [action, grabActionHandler]);
+      if (action.name === "grab") grabHandler.releaseElement();
+      if (action.name === "create") createHandler.savePreviewElement();
+    }, [action, grabHandler, createHandler]);
 
   return (
     <div
       id="board"
       onMouseDown={mouseDownHandler}
-      onMouseUp={mouseUpHandler}
       onMouseMove={mouseMoveHandler}
-      onWheel={controlsHandler.updateScale}
+      onMouseUp={mouseUpHandler}
+      onWheel={frameHandler.updateScale}
       className="h-full w-full select-none overflow-hidden"
       style={{
         cursor: action.cursor,
-        backgroundColor: colorPallete[backgroundColor].lighter,
+        backgroundImage: `radial-gradient(${colorPallete[backgroundColor].light} 1.5px, ${colorPallete[backgroundColor].lighter}50 1.5px)`,
+        backgroundSize: `60px 60px`,
+        opacity: 1,
       }}
     >
       <div
         id="frame"
-        className="h-full w-full select-none bg-Serenade-50"
+        className="relative h-full w-full select-none"
         style={{
           transform: `translate(${controls.x}px, ${controls.y}px) scale(${controls.z})`,
         }}
-      ></div>
+      >
+        {elements.map((element) => (
+          <Shape
+            key={element.id}
+            {...{ ...element, setAction }}
+            previousAction={previousActionRef.current}
+          />
+        ))}
+
+        {previewElement && (
+          <div
+            className="absolute origin-top-left"
+            style={{
+              width: previewElement.size.width,
+              height: previewElement.size.height,
+              transform: `translate(${previewElement.position.x}px, ${previewElement.position.y}px)`,
+            }}
+          >
+            <Shape {...{ ...previewElement, position: { x: 0, y: 0 } }} />
+
+            <p
+              style={{ backgroundColor: color.main }}
+              className="absolute -bottom-8 flex w-fit min-w-[60px] items-center justify-center rounded-sm px-2 py-1 text-xs text-white"
+            >
+              {previewElement.size.width.toFixed(0)} x{" "}
+              {previewElement.size.height.toFixed(0)}
+            </p>
+          </div>
+        )}
+      </div>
 
       <ToolBox {...{ setColor, color, setAction, action }} />
 
