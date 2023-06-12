@@ -137,9 +137,11 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
   const mouseDownHandler: React.MouseEventHandler<HTMLElement> = useCallback(
     (e) => {
       const { clientX: cx, clientY: cy, buttons: buttonIndex } = e;
-      const target = e.target as HTMLElement;
       const pressedButton = buttons[buttonIndex];
-      const id = target.getAttribute("id") || undefined;
+
+      const target = e.target as HTMLElement;
+      const id = target.getAttribute("id");
+      if (!id) return;
 
       if (action.name === "grab" || pressedButton === "wheel")
         grabHandler.grabElement(id);
@@ -164,11 +166,16 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     [action, grabHandler, createHandler]
   );
 
-  const mouseUpHandler: React.MouseEventHandler<HTMLElement> =
-    useCallback(() => {
+  const mouseUpHandler: React.MouseEventHandler<HTMLElement> = useCallback(
+    (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.getAttribute("id")) return;
+
       if (action.name === "grab") grabHandler.releaseElement();
       if (action.name === "create") createHandler.savePreviewElement();
-    }, [action, grabHandler, createHandler]);
+    },
+    [action, grabHandler, createHandler]
+  );
 
   return (
     <div
