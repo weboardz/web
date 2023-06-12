@@ -5,10 +5,10 @@ import {
   ApplicationColor,
   actionSelector,
   colorPallete,
-} from "@/lib";
+} from "@/application";
 
-import { Elements, createElement } from "@/lib";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useElements, usePrevious } from "@/hooks";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ToolBox } from "./ToolBox";
 import { Shape } from "./elements/Shape";
 
@@ -30,18 +30,22 @@ type BoardProps = {
 const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
   const [controls, setControls] = useState({ x: 0, y: 0, z: 1 });
   const [color, setColor] = useState<ApplicationColor>(colorPallete.AliceBlue);
+
   const [action, setAction] = useState<ApplicationAction>(
     actionSelector.select()
   );
+  const previousAction = usePrevious<ApplicationAction>(action);
 
-  const previousActionRef = useRef<ApplicationAction>(action);
+  const { elements, previewElement, elementsHandler } = useElements();
 
-  useEffect(() => {
-    previousActionRef.current = action;
-  }, [action]);
+  const [editBox, setEditBox] = useState<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  }>();
 
-  const [elements, setElements] = useState<Elements[]>([]);
-  const [previewElement, setPreviewElement] = useState<Elements>();
+  const [resize, setResize] = useState<"top" | "bottom" | "left" | "right">();
 
   const frameHandler = useMemo(() => {
     const updateScale: React.WheelEventHandler<HTMLElement> = (e) => {
@@ -77,25 +81,17 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
         return;
       }
 
-      setElements(
-        elements.map((element) =>
-          element.id === action.targetId
-            ? {
-                ...element,
-                position: {
-                  x: element.position.x + mx / controls.z,
-                  y: element.position.y + my / controls.z,
-                },
-              }
-            : element
-        )
-      );
+      elementsHandler
+        .update(action.targetId)
+        .position(mx / controls.z, my / controls.z);
+
+      setEditBox(undefined);
     };
 
     const releaseElement = () => setAction(actionSelector.select());
 
     return { grabElement, updateElementPosition, releaseElement };
-  }, [action, controls, elements, frameHandler]);
+  }, [action, controls, frameHandler, elementsHandler]);
 
   const createHandler = useMemo(() => {
     const calculateScaledPosition = (
@@ -113,38 +109,52 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
 
     const createPreviewElement = (initialX: number, initialY: number) => {
       if (!action.toolBoxSelection) return;
-      setPreviewElement(
-        createElement[action.toolBoxSelection as string](
+
+      elementsHandler
+        .create(
           calculateScaledPosition(initialX, controls.x, window.innerWidth),
           calculateScaledPosition(initialY, controls.y, window.innerHeight),
           color
         )
-      );
+        .square();
     };
 
     const updatePreviewElementSize = (mx: number, my: number) => {
       if (!previewElement) return;
-      setPreviewElement({
-        ...previewElement,
-        size: {
-          width: Math.abs(previewElement.size.width + mx / controls.z),
-          height: Math.abs(previewElement.size.height + my / controls.z),
-        },
-      });
+      elementsHandler
+        .update()
+        .previewElementSize(mx / controls.z, my / controls.z);
     };
 
-    const savePreviewElement = () => {
-      if (!previewElement) return;
-      setElements([...elements, previewElement]);
-      setPreviewElement(undefined);
-    };
+    const savePreviewElement = () => elementsHandler.save();
 
     return {
       createPreviewElement,
       updatePreviewElementSize,
       savePreviewElement,
     };
-  }, [color, controls, elements, previewElement, action]);
+  }, [color, controls, previewElement, action, elementsHandler]);
+
+  const selectHandler = useMemo(() => {
+    const showEditBoxToElement = (id: string) => {
+      const targetElement = elements.find((element) => element.id === id);
+      if (!targetElement) return;
+      const { startPosition: position, size } = targetElement;
+      const offset = 6;
+      setEditBox({
+        x: position.x - offset,
+        y: position.y - offset,
+        w: size.width + 2 * offset,
+        h: size.height + 2 * offset,
+      });
+    };
+
+    const resizeElement = (id: string, mx: number, my: number) => {
+      elementsHandler.update(id).size(mx / controls.z, my / controls.z, resize);
+    };
+
+    return { showEditBoxToElement, resizeElement };
+  }, [elements, resize, controls, elementsHandler]);
 
   const mouseDownHandler: React.MouseEventHandler<HTMLElement> = useCallback(
     (e) => {
@@ -176,8 +186,11 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
 
       if (action.name === "create")
         createHandler.updatePreviewElementSize(mx, my);
+
+      if (action.name === "select" && resize && action.targetId)
+        selectHandler.resizeElement(action.targetId, mx, my);
     },
-    [action, grabHandler, createHandler]
+    [action, grabHandler, createHandler, selectHandler, resize]
   );
 
   const mouseUpHandler: React.MouseEventHandler<HTMLElement> = useCallback(
@@ -191,6 +204,24 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     [action, grabHandler, createHandler]
   );
 
+  const mouseClickHandler: React.MouseEventHandler<HTMLElement> = useCallback(
+    (e) => {
+      const target = e.target as HTMLElement;
+      const id = target.getAttribute("id") || undefined;
+
+      if (id === "frame" || id === "board") {
+        setEditBox(undefined);
+        setResize(undefined);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (action.name === "select" && action.targetId)
+      selectHandler.showEditBoxToElement(action.targetId);
+  }, [action, selectHandler]);
+
   return (
     <div
       id="board"
@@ -198,6 +229,7 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
       onMouseMove={mouseMoveHandler}
       onMouseUp={mouseUpHandler}
       onWheel={frameHandler.updateScale}
+      onClick={mouseClickHandler}
       className="h-full w-full select-none overflow-hidden"
       style={{
         cursor: action.cursor,
@@ -216,10 +248,39 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
         {elements.map((element) => (
           <Shape
             key={element.id}
-            {...{ ...element, setAction }}
-            previousAction={previousActionRef.current}
+            borderRadius={4}
+            borderWidth={2}
+            {...{ ...element, setAction, action, previousAction }}
           />
         ))}
+
+        {editBox && action.name === "select" && (
+          <div
+            className="relative -z-10 border border-blue-500"
+            style={{
+              transform: `translate(${editBox.x}px, ${editBox.y}px)`,
+              width: editBox.w,
+              height: editBox.h,
+            }}
+          >
+            <div
+              onMouseDown={() => setResize("top")}
+              className="absolute -top-[6px] right-1/2 h-[10px] w-[10px] translate-x-1/2 rounded-sm border border-blue-500 bg-white hover:scale-110 hover:cursor-ns-resize"
+            />
+            <div
+              onMouseDown={() => setResize("bottom")}
+              className="absolute -bottom-[6px] right-1/2 h-[10px] w-[10px] translate-x-1/2 rounded-sm border border-blue-500 bg-white hover:scale-110 hover:cursor-ns-resize"
+            />
+            <div
+              onMouseDown={() => setResize("left")}
+              className="absolute -left-[6px] top-1/2 h-[10px] w-[10px] -translate-y-1/2 rounded-sm border border-blue-500 bg-white hover:scale-110 hover:cursor-ew-resize"
+            />
+            <div
+              onMouseDown={() => setResize("right")}
+              className="absolute -right-[6px] top-1/2 h-[10px] w-[10px] -translate-y-1/2 rounded-sm border border-blue-500 bg-white hover:scale-110 hover:cursor-ew-resize"
+            />
+          </div>
+        )}
 
         {previewElement && (
           <div
@@ -227,10 +288,14 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
             style={{
               width: previewElement.size.width,
               height: previewElement.size.height,
-              transform: `translate(${previewElement.position.x}px, ${previewElement.position.y}px)`,
+              transform: `translate(${previewElement.startPosition.x}px, ${previewElement.startPosition.y}px)`,
             }}
           >
-            <Shape {...{ ...previewElement, position: { x: 0, y: 0 } }} />
+            <Shape
+              borderRadius={4}
+              borderWidth={2}
+              {...{ ...previewElement, startPosition: { x: 0, y: 0 } }}
+            />
 
             <p
               style={{ backgroundColor: color.main }}
