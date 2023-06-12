@@ -72,14 +72,30 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
       button: MouseButton
     ) => {
       if (!action.targetId || (button !== "left" && button !== "wheel")) return;
-      if (action.targetId === "board" || action.targetId === "frame")
+      if (action.targetId === "board" || action.targetId === "frame") {
         frameHandler.updatePosition(mx, my);
+        return;
+      }
+
+      setElements(
+        elements.map((element) =>
+          element.id === action.targetId
+            ? {
+                ...element,
+                position: {
+                  x: element.position.x + mx / controls.z,
+                  y: element.position.y + my / controls.z,
+                },
+              }
+            : element
+        )
+      );
     };
 
     const releaseElement = () => setAction(actionSelector.select());
 
     return { grabElement, updateElementPosition, releaseElement };
-  }, [action, frameHandler]);
+  }, [action, controls, elements, frameHandler]);
 
   const createHandler = useMemo(() => {
     const calculateScaledPosition = (
@@ -97,10 +113,6 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
 
     const createPreviewElement = (initialX: number, initialY: number) => {
       if (!action.toolBoxSelection) return;
-
-      console.log(
-        calculateScaledPosition(initialY, controls.y, window.innerHeight)
-      );
       setPreviewElement(
         createElement[action.toolBoxSelection as string](
           calculateScaledPosition(initialX, controls.x, window.innerWidth),
@@ -147,6 +159,8 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
         grabHandler.grabElement(id);
 
       if (action.name === "create") createHandler.createPreviewElement(cx, cy);
+
+      if (action.name === "select") setAction(actionSelector.grab(id));
     },
     [action, grabHandler, createHandler]
   );
