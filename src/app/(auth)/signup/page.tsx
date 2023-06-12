@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowLink, Input, InputProps, Submit } from "@/components";
-import { api, convertFormDataToObject } from "@/lib";
+import { api } from "@/config";
+import { convertFormDataToObject } from "@/lib";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 
