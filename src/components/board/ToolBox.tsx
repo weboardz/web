@@ -2,7 +2,6 @@ import {
   ApplicationAction,
   ApplicationColor,
   ToolBoxOption,
-  actionSelector,
   colorPallete,
 } from "@/application";
 
@@ -20,9 +19,8 @@ import { cloneElement } from "react";
 
 type ToolBoxProps = {
   action: ApplicationAction;
-  setAction: React.Dispatch<React.SetStateAction<ApplicationAction>>;
-  color: ApplicationColor;
-  setColor: React.Dispatch<React.SetStateAction<ApplicationColor>>;
+  selectToolBoxOption: (option: ToolBoxOption) => void;
+  selectToolBoxColor: (color: ApplicationColor) => void;
 };
 
 const toolBoxButtons: { name: ToolBoxOption; icon: JSX.Element }[] = [
@@ -52,7 +50,11 @@ const toolBoxButtons: { name: ToolBoxOption; icon: JSX.Element }[] = [
   },
 ];
 
-const ToolBox = ({ action, setAction, color, setColor }: ToolBoxProps) => {
+const ToolBox = ({
+  action,
+  selectToolBoxColor,
+  selectToolBoxOption,
+}: ToolBoxProps) => {
   return (
     <nav className="absolute left-1/2 top-14 flex -translate-x-1/2 items-center gap-4 rounded-md bg-Alabaster-50 px-3 py-2 opacity-75 shadow-md transition hover:scale-105 hover:opacity-100">
       {toolBoxButtons.map(({ icon, name }) => {
@@ -61,7 +63,7 @@ const ToolBox = ({ action, setAction, color, setColor }: ToolBoxProps) => {
             key={name}
             {...{ name, icon }}
             isSelected={action.toolBoxSelection === name}
-            onClickHandler={(action: ApplicationAction) => setAction(action)}
+            onClickHandler={() => selectToolBoxOption(name)}
           />
         );
       })}
@@ -69,24 +71,43 @@ const ToolBox = ({ action, setAction, color, setColor }: ToolBoxProps) => {
       <Button icon={<Palette />} onClickHandler={() => {}} isSelected={false}>
         <div
           className="absolute bottom-2 right-2 h-2 w-2 rounded-full"
-          style={{ backgroundColor: color.main }}
+          style={{ backgroundColor: action.color.main }}
         />
         <ul className="absolute left-0 top-0 flex h-full w-full scale-0 transition-transform group-hover/button:scale-100">
           <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 flex-row-reverse items-center justify-between group-hover/button:-rotate-45">
-            <ColorButton color="Narvik" onClickHandler={setColor} />
-            <ColorButton color="BlackHaze" onClickHandler={setColor} adjust />
+            <ColorButton color="Narvik" onClickHandler={selectToolBoxColor} />
+            <ColorButton
+              adjust
+              color="BlackHaze"
+              onClickHandler={selectToolBoxColor}
+            />
           </li>
           <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between group-hover/button:rotate-90">
-            <ColorButton color="IslandSpice" onClickHandler={setColor} adjust />
-            <ColorButton color="WispPink" onClickHandler={setColor} />
+            <ColorButton
+              adjust
+              color="IslandSpice"
+              onClickHandler={selectToolBoxColor}
+            />
+            <ColorButton color="WispPink" onClickHandler={selectToolBoxColor} />
           </li>
           <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between group-hover/button:rotate-45">
-            <ColorButton color="Serenade" onClickHandler={setColor} adjust />
-            <ColorButton color="Magnolia" onClickHandler={setColor} />
+            <ColorButton
+              adjust
+              color="Serenade"
+              onClickHandler={selectToolBoxColor}
+            />
+            <ColorButton color="Magnolia" onClickHandler={selectToolBoxColor} />
           </li>
           <li className="absolute left-1/2 top-1/2 flex h-fit w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-between">
-            <ColorButton color="Chablis" onClickHandler={setColor} adjust />
-            <ColorButton color="AliceBlue" onClickHandler={setColor} />
+            <ColorButton
+              adjust
+              color="Chablis"
+              onClickHandler={selectToolBoxColor}
+            />
+            <ColorButton
+              color="AliceBlue"
+              onClickHandler={selectToolBoxColor}
+            />
           </li>
         </ul>
       </Button>
@@ -132,15 +153,7 @@ const Button = ({
 }) => {
   return (
     <button
-      onClick={() =>
-        onClickHandler(
-          isSelected
-            ? actionSelector.grab()
-            : name === "cursor"
-            ? actionSelector.select()
-            : actionSelector.create(name)
-        )
-      }
+      onClick={onClickHandler}
       className="group/button relative flex h-10 w-10 items-center justify-center rounded-md transition hover:scale-110 hover:bg-AliceBlue-100 hover:shadow-sm"
       style={{
         backgroundColor: isSelected
