@@ -1,4 +1,9 @@
-import { ApplicationColor, ApplicationStyles, Elements } from "@/application";
+import {
+  ApplicationColor,
+  ApplicationStyles,
+  Elements,
+  ResizeSide,
+} from "@/application";
 import { useMemo, useState } from "react";
 
 const useElements = (initialElements?: Elements[]) => {
@@ -91,11 +96,7 @@ const useElements = (initialElements?: Elements[]) => {
           );
         },
 
-        size: (
-          mx: number,
-          my: number,
-          side?: "top" | "bottom" | "left" | "right"
-        ) => {
+        size: (mx: number, my: number, side?: ResizeSide) => {
           switch (side) {
             case "top":
               setElements(
