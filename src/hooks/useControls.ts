@@ -1,30 +1,30 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 const [MIN_SCALE, MAX_SCALE, SCALE_FACTOR] = [0.6, 2, 1200];
 
 const useControls = () => {
-  const [framePosition, setFramePosition] = useState({ x: 0, y: 0 });
-  const [frameScale, setFrameScale] = useState(1);
+  const [frame, setFrame] = useState({ position: { x: 0, y: 0 }, scale: 1 });
 
-  const updateFramePosition = useCallback(
-    (mx: number, my: number) => {
-      setFramePosition({ x: framePosition.x + mx, y: framePosition.y + my });
-    },
-    [framePosition]
-  );
+  const updateFrame = useMemo(() => {
+    return {
+      position: (mx: number, my: number) => {
+        setFrame({
+          ...frame,
+          position: { x: frame.position.x + mx, y: frame.position.y + my },
+        });
+      },
 
-  const updateFrameScale = useCallback(
-    (deltaY: number) => {
-      const amount = deltaY / SCALE_FACTOR;
+      scale: (deltaY: number) => {
+        const amount = deltaY / SCALE_FACTOR;
 
-      const isAtMinLimit = frameScale <= MIN_SCALE && amount < 0;
-      const isAtMaxLimit = frameScale >= MAX_SCALE && amount > 0;
+        const isAtMinLimit = frame.scale <= MIN_SCALE && amount < 0;
+        const isAtMaxLimit = frame.scale >= MAX_SCALE && amount > 0;
 
-      if (isAtMinLimit || isAtMaxLimit) return;
-      setFrameScale(frameScale + amount);
-    },
-    [frameScale]
-  );
+        if (isAtMinLimit || isAtMaxLimit) return;
+        setFrame({ ...frame, scale: frame.scale + amount });
+      },
+    };
+  }, [frame]);
 
   const getScaledCoordinates = useCallback(
     (clientCoordinates: { x: number; y: number }) => {
@@ -34,13 +34,13 @@ const useControls = () => {
       ];
 
       const [offsetWidth, offsetHeight] = [
-        (window.innerWidth * (1 / frameScale - 1)) / 2,
-        (window.innerHeight * (1 / frameScale - 1)) / 2,
+        (window.innerWidth * (1 / frame.scale - 1)) / 2,
+        (window.innerHeight * (1 / frame.scale - 1)) / 2,
       ];
 
       const [positionX, positionY] = [
-        clientCoordinates.x - framePosition.x,
-        clientCoordinates.y - framePosition.y,
+        clientCoordinates.x - frame.position.x,
+        clientCoordinates.y - frame.position.y,
       ];
 
       const [scaleTransformationX, scaleTransformationY] = [
@@ -53,14 +53,12 @@ const useControls = () => {
         y: positionY - scaleTransformationY,
       };
     },
-    [framePosition, frameScale]
+    [frame]
   );
 
   return {
-    framePosition,
-    frameScale,
-    updateFramePosition,
-    updateFrameScale,
+    frame,
+    updateFrame,
     getScaledCoordinates,
   };
 };
