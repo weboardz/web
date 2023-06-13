@@ -30,6 +30,8 @@ export namespace ApplicationStyles {
     select = "default",
     create = "crosshair",
     text = "text",
+    resizeHorizontal = "ew-resize",
+    resizeVertical = "ns-resize",
   }
 }
 
@@ -49,11 +51,15 @@ export type ToolBoxOption =
   | "text"
   | "image";
 
+export type ResizeSide = "top" | "bottom" | "left" | "right";
+
 export type ApplicationAction = {
-  name: "grab" | "select" | "create";
+  name: "grab" | "select" | "create" | "resize";
   cursor: ApplicationStyles.Cursor;
+  color: ApplicationColor;
   targetId?: string;
   toolBoxSelection?: ToolBoxOption;
+  resizeSide?: ResizeSide;
 };
 
 export interface Element {
@@ -85,3 +91,10 @@ export interface Image extends Element {
 }
 
 export type Elements = Shape | Text | Arrow | Image;
+
+export enum MouseButtons {
+  none,
+  left,
+  right,
+  wheel = 4,
+}
