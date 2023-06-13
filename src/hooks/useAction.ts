@@ -1,6 +1,8 @@
 import {
   ApplicationAction,
+  ApplicationColor,
   ApplicationStyles,
+  ResizeSide,
   ToolBoxOption,
 } from "@/application";
 
@@ -43,6 +45,18 @@ const useAction = (initialAction: ApplicationAction) => {
           toolBoxSelection: option,
         });
       },
+      resize: (id: string, side: ResizeSide) => {
+        setAction({
+          ...action,
+          name: "resize",
+          cursor:
+            side === "bottom" || side === "top"
+              ? ApplicationStyles.Cursor.resizeVertical
+              : ApplicationStyles.Cursor.resizeHorizontal,
+          targetId: id,
+          resizeSide: side,
+        });
+      },
       previous: () => setAction(previousAction),
     };
   }, [action, previousAction]);
@@ -54,8 +68,11 @@ const useAction = (initialAction: ApplicationAction) => {
       grabElement: (id?: string) => changeActionTo.grab(id),
       selectElement: (id?: string) => changeActionTo.select(id),
       createElement: (option: ToolBoxOption) => changeActionTo.create(option),
+      resizeElement: (id: string, side: ResizeSide) =>
+        changeActionTo.resize(id, side),
+      selectColor: (color: ApplicationColor) => setAction({ ...action, color }),
     };
-  }, [changeActionTo]);
+  }, [action, changeActionTo]);
 
   return { action, previousAction, actionHandler };
 };
