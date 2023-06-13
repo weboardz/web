@@ -1,5 +1,3 @@
-import { ApplicationAction, ApplicationStyles, ToolBoxOption } from "./types";
-
 export const colorPallete = {
   BlackHaze: {
     lighter: "#e9eff5",
@@ -63,35 +61,5 @@ export const colorPallete = {
     main: "#ec48a1",
     dark: "#be1873",
     darker: "#831852",
-  },
-};
-
-export const actionSelector = {
-  grab: (id?: string): ApplicationAction => {
-    return {
-      name: "grab",
-      cursor: id
-        ? ApplicationStyles.Cursor.grabbing
-        : ApplicationStyles.Cursor.grab,
-      targetId: id,
-    };
-  },
-  select: (id?: string): ApplicationAction => {
-    return {
-      name: "select",
-      cursor: ApplicationStyles.Cursor.select,
-      targetId: id,
-      toolBoxSelection: "cursor",
-    };
-  },
-  create: (option?: ToolBoxOption): ApplicationAction => {
-    return {
-      name: "create",
-      cursor:
-        option === "text"
-          ? ApplicationStyles.Cursor.text
-          : ApplicationStyles.Cursor.create,
-      toolBoxSelection: option,
-    };
   },
 };
