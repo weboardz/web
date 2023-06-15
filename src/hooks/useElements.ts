@@ -4,11 +4,19 @@ import {
   Elements,
   ResizeSide,
 } from "@/application";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const useElements = (initialElements?: Elements[]) => {
   const [elements, setElements] = useState<Elements[]>(initialElements || []);
   const [previewElement, setPreviewElement] = useState<Elements>();
+  const [targetElement, setTargetElement] = useState<Elements>();
+
+  useEffect(() => {
+    if (!targetElement) return;
+    setTargetElement(
+      elements.find((element) => element.id === targetElement.id)
+    );
+  }, [elements, targetElement]);
 
   const elementsHandler = useMemo(() => {
     const create = (x: number, y: number, color: ApplicationColor) => {
@@ -71,19 +79,25 @@ const useElements = (initialElements?: Elements[]) => {
     const save = () => {
       if (!previewElement) return;
       setElements([...elements, previewElement]);
+      setTargetElement(previewElement);
       setPreviewElement(undefined);
     };
 
-    const remove = (id: string) => {
-      setElements(elements.filter((element) => element.id !== id));
+    const remove = () => {
+      if (!targetElement) return;
+      setElements(
+        elements.filter((element) => element.id !== targetElement.id)
+      );
     };
 
-    const update = (id?: string) => {
+    const update = () => {
       return {
         position: (mx: number, my: number) => {
+          if (!targetElement) return;
+
           setElements(
             elements.map((element) =>
-              element.id === id
+              element.id === targetElement.id
                 ? {
                     ...element,
                     startPosition: {
@@ -97,11 +111,13 @@ const useElements = (initialElements?: Elements[]) => {
         },
 
         size: (mx: number, my: number, side?: ResizeSide) => {
+          if (!targetElement) return;
+
           switch (side) {
             case "top":
               setElements(
                 elements.map((element) =>
-                  element.id === id
+                  element.id === targetElement.id
                     ? {
                         ...element,
                         startPosition: {
@@ -121,7 +137,7 @@ const useElements = (initialElements?: Elements[]) => {
             case "left":
               setElements(
                 elements.map((element) =>
-                  element.id === id
+                  element.id === targetElement.id
                     ? {
                         ...element,
                         startPosition: {
@@ -141,7 +157,7 @@ const useElements = (initialElements?: Elements[]) => {
             case "bottom":
               setElements(
                 elements.map((element) =>
-                  element.id === id
+                  element.id === targetElement.id
                     ? {
                         ...element,
                         size: {
@@ -157,7 +173,7 @@ const useElements = (initialElements?: Elements[]) => {
             case "right":
               setElements(
                 elements.map((element) =>
-                  element.id === id
+                  element.id === targetElement.id
                     ? {
                         ...element,
                         size: {
@@ -173,7 +189,7 @@ const useElements = (initialElements?: Elements[]) => {
             default:
               setElements(
                 elements.map((element) =>
-                  element.id === id
+                  element.id === targetElement.id
                     ? {
                         ...element,
                         size: {
@@ -202,10 +218,18 @@ const useElements = (initialElements?: Elements[]) => {
       };
     };
 
-    return { create, save, remove, update };
-  }, [elements, previewElement]);
+    const target = () => {
+      return {
+        select: (id: string) =>
+          setTargetElement(elements.find((element) => element.id === id)),
+        release: () => setTargetElement(undefined),
+      };
+    };
 
-  return { elements, previewElement, elementsHandler };
+    return { create, save, remove, update, target };
+  }, [elements, previewElement, targetElement]);
+
+  return { elements, previewElement, targetElement, elementsHandler };
 };
 
 export { useElements };
