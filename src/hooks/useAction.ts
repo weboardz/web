@@ -6,12 +6,18 @@ import {
   ToolBoxOption,
 } from "@/application";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePrevious } from "./usePrevious";
 
 const useAction = (initialAction: ApplicationAction) => {
-  const [action, setAction] = useState<ApplicationAction>(initialAction);
-  const previousAction = usePrevious<ApplicationAction>(action);
+  const [action, setAction] = useState(initialAction);
+  const previousAction = usePrevious(action);
+  const beforePreviousAction = useRef(previousAction);
+
+  useEffect(() => {
+    if (JSON.stringify(action) === JSON.stringify(previousAction)) return;
+    beforePreviousAction.current = previousAction;
+  }, [action, previousAction]);
 
   const changeActionTo = useMemo(() => {
     return {
@@ -49,17 +55,17 @@ const useAction = (initialAction: ApplicationAction) => {
         setAction({
           ...action,
           name: "resize",
-          cursor:
-            side === "bottom" || side === "top"
-              ? ApplicationStyles.Cursor.resizeVertical
-              : ApplicationStyles.Cursor.resizeHorizontal,
           targetId: id,
           resizeSide: side,
         });
       },
-      previous: () => setAction(previousAction),
+      previous: () => {
+        JSON.stringify(action) !== JSON.stringify(previousAction)
+          ? setAction(previousAction)
+          : setAction(beforePreviousAction.current);
+      },
     };
-  }, [action, previousAction]);
+  }, [action, previousAction, beforePreviousAction]);
 
   const actionHandler = useMemo(() => {
     return {
