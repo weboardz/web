@@ -2,7 +2,7 @@ import {
   ApplicationAction,
   ApplicationColor,
   ApplicationStyles,
-  ResizeSide,
+  ElementSide,
   ToolBoxOption,
 } from "@/application";
 
@@ -51,12 +51,12 @@ const useAction = (initialAction: ApplicationAction) => {
           toolBoxSelection: option,
         });
       },
-      resize: (id: string, side: ResizeSide) => {
+      resize: (id: string, side: ElementSide) => {
         setAction({
           ...action,
           name: "resize",
           targetId: id,
-          resizeSide: side,
+          elementSide: side,
         });
       },
       previous: () => {
@@ -74,7 +74,7 @@ const useAction = (initialAction: ApplicationAction) => {
       grabElement: (id?: string) => changeActionTo.grab(id),
       selectElement: (id?: string) => changeActionTo.select(id),
       createElement: (option: ToolBoxOption) => changeActionTo.create(option),
-      resizeElement: (id: string, side: ResizeSide) =>
+      resizeElement: (id: string, side: ElementSide) =>
         changeActionTo.resize(id, side),
       selectColor: (color: ApplicationColor) => setAction({ ...action, color }),
     };

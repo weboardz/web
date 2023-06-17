@@ -51,7 +51,7 @@ export type ToolBoxOption =
   | "text"
   | "image";
 
-export type ResizeSide = "top" | "bottom" | "left" | "right";
+export type ElementSide = "top" | "bottom" | "left" | "right";
 
 export type ApplicationAction = {
   name: "grab" | "select" | "create" | "resize";
@@ -59,7 +59,7 @@ export type ApplicationAction = {
   color: ApplicationColor;
   targetId?: string;
   toolBoxSelection?: ToolBoxOption;
-  resizeSide?: ResizeSide;
+  elementSide?: ElementSide;
 };
 
 export interface Element {
@@ -90,7 +90,7 @@ export interface Image extends Element {
   url: string;
 }
 
-export type Elements = Shape | Text | Arrow | Image;
+export type ElementCategory = Shape | Text | Arrow | Image;
 
 export enum MouseButtons {
   none,
