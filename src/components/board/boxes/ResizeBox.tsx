@@ -1,21 +1,26 @@
-import { ApplicationStyles, ResizeSide } from "@/application";
+import { ApplicationStyles, ElementSide } from "@/application";
 
 type ResizeBoxProps = {
+  id: string;
+  children?: React.ReactNode;
   startPosition: { x: number; y: number };
   size: { width: number; height: number };
-  setActionHandler(side: ResizeSide): void;
+  setActionHandler(side: ElementSide): void;
 };
 
-const OFFSET = 6;
+const OFFSET = 8;
 
 const ResizeBox = ({
+  id,
   size,
+  children,
   startPosition,
   setActionHandler,
 }: ResizeBoxProps) => {
   return (
     <div
-      className="relative -z-10 border border-blue-500"
+      {...{ id }}
+      className="relative border border-blue-500"
       style={{
         width: size.width + OFFSET * 2,
         height: size.height + OFFSET * 2,
@@ -24,6 +29,7 @@ const ResizeBox = ({
           ${startPosition.y - OFFSET}px)`,
       }}
     >
+      {children}
       <div
         onMouseDown={() => setActionHandler("top")}
         className="absolute -top-[6px] right-1/2 h-[10px] w-[10px] translate-x-1/2 rounded-sm border border-blue-500 bg-white hover:scale-110"
