@@ -14,7 +14,7 @@ import { useAction, useControls, useElements } from "@/hooks";
 import { useCallback } from "react";
 
 import { ToolBox } from "./boxes";
-import { Shape } from "./elements";
+import { Shape, Text } from "./elements";
 
 enum MouseButtons {
   none,
@@ -86,19 +86,30 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     [action, elementsHandler]
   );
 
-  const renderElementsBasedOnTheirTypes = useCallback(
+  const renderElementByTheirType = useCallback(
     (element: ElementCategory, asPreview?: boolean) => {
-      const { type } = element;
+      switch (element.type) {
+        case "text":
+          return (
+            <Text
+              key={element.id}
+              showAsPreview={!!asPreview}
+              isSelected={action.targetId === element.id}
+              element={element as ApplicationElements.Text}
+            />
+          );
+          break;
 
-      if (type === "circle" || type === "square") {
-        return (
-          <Shape
-            key={element.id}
-            showAsPreview={!!asPreview}
-            {...(element as ApplicationElements.Shape)}
-            isSelected={action.targetId === element.id}
-          />
-        );
+        default:
+          return (
+            <Shape
+              key={element.id}
+              showAsPreview={!!asPreview}
+              isSelected={action.targetId === element.id}
+              element={element as ApplicationElements.Shape}
+            />
+          );
+          break;
       }
     },
     [action]
@@ -212,10 +223,9 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
           transform: `translate(${frame.position.x}px, ${frame.position.y}px) scale(${frame.scale})`,
         }}
       >
-        {elements.map((element) => renderElementsBasedOnTheirTypes(element))}
+        {elements.map((element) => renderElementByTheirType(element))}
 
-        {previewElement &&
-          renderElementsBasedOnTheirTypes(previewElement, true)}
+        {previewElement && renderElementByTheirType(previewElement, true)}
       </div>
 
       <ToolBox
