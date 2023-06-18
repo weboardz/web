@@ -1,31 +1,26 @@
-import { ApplicationAction, Shape, actionSelector } from "@/application";
+import { Shape as ShapeInterface } from "@/application";
+import { ResizeBox } from "../boxes";
+
+type ShapeProps = ShapeInterface & {
+  key?: string;
+  isSelected: boolean;
+  showAsPreview: boolean;
+};
 
 const Shape = ({
   id,
   size,
   color,
-  startPosition,
+  isSelected,
   borderWidth,
   borderRadius,
-  setAction = () => {},
-  action = actionSelector.select(),
-  previousAction = actionSelector.select(),
-}: Shape & {
-  key?: string;
-  action?: ApplicationAction;
-  previousAction?: ApplicationAction;
-  setAction?: React.Dispatch<React.SetStateAction<ApplicationAction>>;
-}) => {
+  startPosition,
+  showAsPreview,
+}: ShapeProps) => {
   return (
     <div
       id={id}
-      onMouseEnter={() => {
-        if (action.name === "select") return;
-        setAction(actionSelector.select());
-      }}
-      onClick={() => setAction(actionSelector.select(id))}
-      onMouseOut={() => setAction(previousAction)}
-      className="absolute flex origin-top-left select-none items-center justify-center overflow-hidden p-2 transition-shadow hover:shadow-md active:outline-none active:ring-0"
+      className="absolute flex origin-top-left select-none items-center justify-center transition-shadow hover:shadow-md"
       style={{
         backgroundColor: color.lighter,
         borderColor: color.main,
@@ -35,8 +30,13 @@ const Shape = ({
         height: size.height,
         borderWidth,
         borderRadius,
+        zIndex: showAsPreview ? 10 : 0,
       }}
-    ></div>
+    >
+      {(isSelected || showAsPreview) && (
+        <ResizeBox {...{ id, size, color }} showResizeNodes={!showAsPreview} />
+      )}
+    </div>
   );
 };
 

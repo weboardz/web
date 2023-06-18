@@ -1,9 +1,41 @@
-import { ApplicationColor, ApplicationStyles, Elements } from "@/application";
+import {
+  ApplicationColor,
+  ApplicationStyles,
+  ElementCategory,
+  ElementSide,
+} from "@/application";
+
 import { useMemo, useState } from "react";
 
-const useElements = (initialElements?: Elements[]) => {
-  const [elements, setElements] = useState<Elements[]>(initialElements || []);
-  const [previewElement, setPreviewElement] = useState<Elements>();
+type ElementsMap = Map<string, ElementCategory>;
+type ElementsArray = ElementCategory[];
+
+const convertElementsMapToArray = (map: ElementsMap): ElementsArray =>
+  Array.from(map, (entry) => entry[1]);
+
+const convertElementsArrayToMap = (array: ElementsArray): ElementsMap =>
+  new Map(array.map((element) => [element.id, element]));
+
+const useElements = (initialElements: ElementsArray) => {
+  const [previewElement, setPreviewElement] = useState<ElementCategory>();
+  const [elements, setElements] = useState(
+    convertElementsArrayToMap(initialElements)
+  );
+
+  const setElementsHandler = useMemo(() => {
+    return {
+      add: (element: ElementCategory) => {
+        setElements(new Map(elements.set(element.id, element)));
+      },
+      update: () => {
+        setElements(new Map(elements));
+      },
+      remove: (id: string) => {
+        elements.delete(id);
+        setElements(new Map(elements));
+      },
+    };
+  }, [elements]);
 
   const elementsHandler = useMemo(() => {
     const create = (x: number, y: number, color: ApplicationColor) => {
@@ -23,7 +55,6 @@ const useElements = (initialElements?: Elements[]) => {
             borderRadius: ApplicationStyles.BorderRadius.regular,
           });
         },
-
         circle: () => {
           setPreviewElement({
             ...baseElement,
@@ -32,7 +63,6 @@ const useElements = (initialElements?: Elements[]) => {
             borderRadius: ApplicationStyles.BorderRadius.full,
           });
         },
-
         text: (data: string) => {
           setPreviewElement({
             ...baseElement,
@@ -44,7 +74,6 @@ const useElements = (initialElements?: Elements[]) => {
             fontSize: ApplicationStyles.FontSize.small,
           });
         },
-
         arrow: (x: number, y: number) => {
           setPreviewElement({
             ...baseElement,
@@ -52,7 +81,6 @@ const useElements = (initialElements?: Elements[]) => {
             endPosition: { x, y },
           });
         },
-
         image: (url: string) => {
           setPreviewElement({
             ...baseElement,
@@ -65,146 +93,92 @@ const useElements = (initialElements?: Elements[]) => {
 
     const save = () => {
       if (!previewElement) return;
-      setElements([...elements, previewElement]);
+      setElementsHandler.add(previewElement);
       setPreviewElement(undefined);
     };
 
     const remove = (id: string) => {
-      setElements(elements.filter((element) => element.id !== id));
+      setElementsHandler.remove(id);
     };
 
-    const update = (id?: string) => {
+    const update = (id: string) => {
+      const targetElement = elements.get(id);
+      if (!targetElement) return;
+
       return {
         position: (mx: number, my: number) => {
-          setElements(
-            elements.map((element) =>
-              element.id === id
-                ? {
-                    ...element,
-                    startPosition: {
-                      x: element.startPosition.x + mx,
-                      y: element.startPosition.y + my,
-                    },
-                  }
-                : element
-            )
-          );
+          targetElement.startPosition = {
+            x: targetElement.startPosition.x + mx,
+            y: targetElement.startPosition.y + my,
+          };
+
+          setElementsHandler.update();
         },
 
-        size: (
-          mx: number,
-          my: number,
-          side?: "top" | "bottom" | "left" | "right"
-        ) => {
+        size: (mx: number, my: number, side?: ElementSide) => {
           switch (side) {
             case "top":
-              setElements(
-                elements.map((element) =>
-                  element.id === id
-                    ? {
-                        ...element,
-                        startPosition: {
-                          ...element.startPosition,
-                          y: element.startPosition.y + my,
-                        },
-                        size: {
-                          ...element.size,
-                          height: element.size.height - my,
-                        },
-                      }
-                    : element
-                )
-              );
+              targetElement.startPosition = {
+                x: targetElement.startPosition.x,
+                y: targetElement.startPosition.y + my,
+              };
+              targetElement.size = {
+                width: targetElement.size.width,
+                height: targetElement.size.height - my,
+              };
               break;
 
             case "left":
-              setElements(
-                elements.map((element) =>
-                  element.id === id
-                    ? {
-                        ...element,
-                        startPosition: {
-                          ...element.startPosition,
-                          x: element.startPosition.x + mx,
-                        },
-                        size: {
-                          ...element.size,
-                          width: element.size.width - mx,
-                        },
-                      }
-                    : element
-                )
-              );
+              targetElement.startPosition = {
+                x: targetElement.startPosition.x + mx,
+                y: targetElement.startPosition.y,
+              };
+              targetElement.size = {
+                width: targetElement.size.width - mx,
+                height: targetElement.size.height,
+              };
               break;
 
             case "bottom":
-              setElements(
-                elements.map((element) =>
-                  element.id === id
-                    ? {
-                        ...element,
-                        size: {
-                          ...element.size,
-                          height: element.size.height + my,
-                        },
-                      }
-                    : element
-                )
-              );
+              targetElement.size = {
+                width: targetElement.size.width,
+                height: targetElement.size.height + my,
+              };
               break;
 
             case "right":
-              setElements(
-                elements.map((element) =>
-                  element.id === id
-                    ? {
-                        ...element,
-                        size: {
-                          ...element.size,
-                          width: element.size.width + mx,
-                        },
-                      }
-                    : element
-                )
-              );
-              break;
-
-            default:
-              setElements(
-                elements.map((element) =>
-                  element.id === id
-                    ? {
-                        ...element,
-                        size: {
-                          width: element.size.width + mx,
-                          height: element.size.height + my,
-                        },
-                      }
-                    : element
-                )
-              );
-
+              targetElement.size = {
+                width: targetElement.size.width + mx,
+                height: targetElement.size.height,
+              };
               break;
           }
-        },
 
-        previewElementSize: (mx: number, my: number) => {
-          if (!previewElement) return;
-          setPreviewElement({
-            ...previewElement,
-            size: {
-              width: previewElement.size.width + mx,
-              height: previewElement.size.height + my,
-            },
-          });
+          setElementsHandler.update();
         },
       };
     };
 
-    return { create, save, remove, update };
-  }, [elements, previewElement]);
+    const updatePreviewElementSize = (mx: number, my: number) => {
+      if (!previewElement) return;
 
-  return { elements, previewElement, elementsHandler };
+      setPreviewElement({
+        ...previewElement,
+        size: {
+          width: previewElement.size.width + mx,
+          height: previewElement.size.height + my,
+        },
+      });
+    };
+
+    return { create, save, remove, update, updatePreviewElementSize };
+  }, [elements, previewElement, setElementsHandler]);
+
+  return {
+    previewElement,
+    elementsHandler,
+    elements: convertElementsMapToArray(elements),
+  };
 };
 
 export { useElements };
