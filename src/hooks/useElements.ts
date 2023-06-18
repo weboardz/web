@@ -1,5 +1,6 @@
 import {
   ApplicationColor,
+  ApplicationElements,
   ApplicationStyles,
   ElementCategory,
   ElementSide,
@@ -68,7 +69,7 @@ const useElements = (initialElements: ElementsArray) => {
             ...baseElement,
             type: "text",
             text: data,
-            size: { width: 14, height: 14 },
+            size: { width: 200, height: 40 },
             fontWeight: ApplicationStyles.FontWeight.regular,
             fontFamily: ApplicationStyles.FontFamily.sans,
             fontSize: ApplicationStyles.FontSize.small,
@@ -155,6 +156,23 @@ const useElements = (initialElements: ElementsArray) => {
           }
 
           setElementsHandler.update();
+        },
+
+        dataFrom: (type: "textTypeElement" | "imageTypeElement") => {
+          switch (type) {
+            case "textTypeElement":
+              const textElement = targetElement as ApplicationElements.Text;
+              return {
+                text: (data: string) => (textElement.text = data),
+              };
+              break;
+            case "imageTypeElement":
+              const imageElement = targetElement as ApplicationElements.Image;
+              return {
+                url: (data: string) => (imageElement.url = data),
+              };
+              break;
+          }
         },
       };
     };
