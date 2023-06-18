@@ -56,6 +56,9 @@ const useAction = (initialAction: ApplicationAction) => {
           ...action,
           name: "resize",
           targetId: id,
+          cursor: ["top", "bottom"].includes(side)
+            ? ApplicationStyles.Cursor.resizeVertical
+            : ApplicationStyles.Cursor.resizeHorizontal,
           elementSide: side,
         });
       },
