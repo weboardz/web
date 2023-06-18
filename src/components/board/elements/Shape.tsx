@@ -1,7 +1,7 @@
-import { Shape as ShapeInterface } from "@/application";
+import { ApplicationElements } from "@/lib/types";
 import { ResizeBox } from "../boxes";
 
-type ShapeProps = ShapeInterface & {
+type ShapeProps = ApplicationElements.Shape & {
   key?: string;
   isSelected: boolean;
   showAsPreview: boolean;

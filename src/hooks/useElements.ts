@@ -3,7 +3,7 @@ import {
   ApplicationStyles,
   ElementCategory,
   ElementSide,
-} from "@/application";
+} from "@/lib/types";
 
 import { useMemo, useState } from "react";
 

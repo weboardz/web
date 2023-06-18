@@ -2,8 +2,9 @@ import {
   ApplicationAction,
   ApplicationColor,
   ToolBoxOption,
-  colorPallete,
-} from "@/application";
+} from "@/lib/types";
+
+import { colorPallete } from "@/lib/constants";
 
 import {
   Circle,

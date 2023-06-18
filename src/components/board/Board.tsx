@@ -2,19 +2,26 @@
 
 import {
   ApplicationAction,
+  ApplicationElements,
   ApplicationStyles,
   ElementCategory,
   ElementSide,
-  MouseButtons,
-  Shape as ShapeInterface,
-  colorPallete,
-} from "@/application";
+} from "@/lib/types";
+
+import { colorPallete } from "@/lib/constants";
 
 import { useAction, useControls, useElements } from "@/hooks";
 import { useCallback } from "react";
 
 import { ToolBox } from "./boxes";
 import { Shape } from "./elements";
+
+enum MouseButtons {
+  none,
+  left,
+  right,
+  wheel = 4,
+}
 
 const initialAction: ApplicationAction = {
   name: "select",
@@ -32,8 +39,6 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
   const { elements, previewElement, elementsHandler } = useElements([]);
   const { frame, updateFrame, getScaledCoordinates } = useControls();
   const { action, actionHandler } = useAction(initialAction);
-
-  console.log(action);
 
   const getMouseEventProps = useCallback(
     (e: React.MouseEvent) => {
@@ -90,7 +95,7 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
           <Shape
             key={element.id}
             showAsPreview={!!asPreview}
-            {...(element as ShapeInterface)}
+            {...(element as ApplicationElements.Shape)}
             isSelected={action.targetId === element.id}
           />
         );

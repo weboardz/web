@@ -4,7 +4,7 @@ import {
   ApplicationStyles,
   ElementSide,
   ToolBoxOption,
-} from "@/application";
+} from "@/lib/types";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePrevious } from "./usePrevious";
