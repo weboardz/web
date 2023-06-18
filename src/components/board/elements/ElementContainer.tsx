@@ -12,10 +12,12 @@ const ElementContainer = ({
   children,
   isSelected,
   showAsPreview,
-  elementProps: { id, color, size, startPosition },
+  elementProps: { id, type, color, size, startPosition },
 }: ElementContainerProps) => {
   return (
     <div
+      {...{ id }}
+      data-type={type}
       className="absolute flex origin-top-left select-none items-center justify-center"
       style={{
         width: size.width,

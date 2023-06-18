@@ -71,8 +71,8 @@ const useElements = (initialElements: ElementsArray) => {
             text: data,
             size: { width: 200, height: 40 },
             fontWeight: ApplicationStyles.FontWeight.regular,
-            fontFamily: ApplicationStyles.FontFamily.sans,
-            fontSize: ApplicationStyles.FontSize.small,
+            fontFamily: ApplicationStyles.FontFamily.alt,
+            fontSize: ApplicationStyles.FontSize.medium,
           });
         },
         arrow: (x: number, y: number) => {
@@ -104,10 +104,11 @@ const useElements = (initialElements: ElementsArray) => {
 
     const update = (id: string) => {
       const targetElement = elements.get(id);
-      if (!targetElement) return;
 
       return {
         position: (mx: number, my: number) => {
+          if (!targetElement) return;
+
           targetElement.startPosition = {
             x: targetElement.startPosition.x + mx,
             y: targetElement.startPosition.y + my,
@@ -117,6 +118,8 @@ const useElements = (initialElements: ElementsArray) => {
         },
 
         size: (mx: number, my: number, side?: ElementSide) => {
+          if (!targetElement) return;
+
           switch (side) {
             case "top":
               targetElement.startPosition = {
@@ -158,21 +161,19 @@ const useElements = (initialElements: ElementsArray) => {
           setElementsHandler.update();
         },
 
-        dataFrom: (type: "textTypeElement" | "imageTypeElement") => {
-          switch (type) {
-            case "textTypeElement":
+        data: () => {
+          return {
+            text: (data: string) => {
+              if (!targetElement || targetElement?.type !== "text") return;
               const textElement = targetElement as ApplicationElements.Text;
-              return {
-                text: (data: string) => (textElement.text = data),
-              };
-              break;
-            case "imageTypeElement":
+              textElement.text = data;
+            },
+            url: (data: string) => {
+              if (!targetElement || targetElement?.type !== "image") return;
               const imageElement = targetElement as ApplicationElements.Image;
-              return {
-                url: (data: string) => (imageElement.url = data),
-              };
-              break;
-          }
+              imageElement.url = data;
+            },
+          };
         },
       };
     };

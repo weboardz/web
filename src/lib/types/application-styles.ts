@@ -15,8 +15,9 @@ export namespace ApplicationStyles {
 
   export enum FontSize {
     small = "1rem",
-    medium = "2rem",
-    large = "3rem",
+    medium = "1.5rem",
+    large = "2rem",
+    extra = "3rem",
   }
 
   export enum FontWeight {
@@ -25,8 +26,8 @@ export namespace ApplicationStyles {
   }
 
   export enum FontFamily {
-    sans = "Roboto",
-    alt = "Rubik",
+    sans = "font-sans",
+    alt = "font-alt",
   }
 
   export enum Cursor {

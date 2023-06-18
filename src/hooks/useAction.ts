@@ -29,6 +29,8 @@ const useAction = (initialAction: ApplicationAction) => {
             ? ApplicationStyles.Cursor.grabbing
             : ApplicationStyles.Cursor.grab,
           targetId: id,
+          elementSide: undefined,
+          toolBoxSelection: undefined,
         });
       },
       select: (id?: string) => {
@@ -38,6 +40,7 @@ const useAction = (initialAction: ApplicationAction) => {
           cursor: ApplicationStyles.Cursor.select,
           targetId: id,
           toolBoxSelection: "cursor",
+          elementSide: undefined,
         });
       },
       create: (option?: ToolBoxOption) => {
@@ -49,6 +52,7 @@ const useAction = (initialAction: ApplicationAction) => {
               ? ApplicationStyles.Cursor.text
               : ApplicationStyles.Cursor.create,
           toolBoxSelection: option,
+          elementSide: undefined,
         });
       },
       resize: (id: string, side: ElementSide) => {
@@ -60,6 +64,17 @@ const useAction = (initialAction: ApplicationAction) => {
             ? ApplicationStyles.Cursor.resizeVertical
             : ApplicationStyles.Cursor.resizeHorizontal,
           elementSide: side,
+          toolBoxSelection: undefined,
+        });
+      },
+      edit: (id: string) => {
+        setAction({
+          ...action,
+          name: "edit",
+          targetId: id,
+          cursor: ApplicationStyles.Cursor.select,
+          elementSide: undefined,
+          toolBoxSelection: undefined,
         });
       },
       previous: () => {
@@ -74,6 +89,7 @@ const useAction = (initialAction: ApplicationAction) => {
     return {
       releaseElement: () => changeActionTo.select(),
       returnToPrevious: () => changeActionTo.previous(),
+      editElement: (id: string) => changeActionTo.edit(id),
       grabElement: (id?: string) => changeActionTo.grab(id),
       selectElement: (id?: string) => changeActionTo.select(id),
       createElement: (option: ToolBoxOption) => changeActionTo.create(option),
