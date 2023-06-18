@@ -1,9 +1,10 @@
 import {
   ApplicationColor,
+  ApplicationElements,
   ApplicationStyles,
   ElementCategory,
   ElementSide,
-} from "@/application";
+} from "@/lib/types";
 
 import { useMemo, useState } from "react";
 
@@ -68,10 +69,10 @@ const useElements = (initialElements: ElementsArray) => {
             ...baseElement,
             type: "text",
             text: data,
-            size: { width: 14, height: 14 },
+            size: { width: 200, height: 40 },
             fontWeight: ApplicationStyles.FontWeight.regular,
-            fontFamily: ApplicationStyles.FontFamily.sans,
-            fontSize: ApplicationStyles.FontSize.small,
+            fontFamily: ApplicationStyles.FontFamily.alt,
+            fontSize: ApplicationStyles.FontSize.medium,
           });
         },
         arrow: (x: number, y: number) => {
@@ -103,10 +104,11 @@ const useElements = (initialElements: ElementsArray) => {
 
     const update = (id: string) => {
       const targetElement = elements.get(id);
-      if (!targetElement) return;
 
       return {
         position: (mx: number, my: number) => {
+          if (!targetElement) return;
+
           targetElement.startPosition = {
             x: targetElement.startPosition.x + mx,
             y: targetElement.startPosition.y + my,
@@ -116,6 +118,8 @@ const useElements = (initialElements: ElementsArray) => {
         },
 
         size: (mx: number, my: number, side?: ElementSide) => {
+          if (!targetElement) return;
+
           switch (side) {
             case "top":
               targetElement.startPosition = {
@@ -155,6 +159,21 @@ const useElements = (initialElements: ElementsArray) => {
           }
 
           setElementsHandler.update();
+        },
+
+        data: () => {
+          return {
+            text: (data: string) => {
+              if (!targetElement || targetElement?.type !== "text") return;
+              const textElement = targetElement as ApplicationElements.Text;
+              textElement.text = data;
+            },
+            url: (data: string) => {
+              if (!targetElement || targetElement?.type !== "image") return;
+              const imageElement = targetElement as ApplicationElements.Image;
+              imageElement.url = data;
+            },
+          };
         },
       };
     };

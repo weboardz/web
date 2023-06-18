@@ -2,19 +2,26 @@
 
 import {
   ApplicationAction,
+  ApplicationElements,
   ApplicationStyles,
   ElementCategory,
   ElementSide,
-  MouseButtons,
-  Shape as ShapeInterface,
-  colorPallete,
-} from "@/application";
+} from "@/lib/types";
+
+import { colorPallete } from "@/lib/constants";
 
 import { useAction, useControls, useElements } from "@/hooks";
 import { useCallback } from "react";
 
 import { ToolBox } from "./boxes";
-import { Shape } from "./elements";
+import { Shape, Text } from "./elements";
+
+enum MouseButtons {
+  none,
+  left,
+  right,
+  wheel = 4,
+}
 
 const initialAction: ApplicationAction = {
   name: "select",
@@ -33,8 +40,6 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
   const { frame, updateFrame, getScaledCoordinates } = useControls();
   const { action, actionHandler } = useAction(initialAction);
 
-  console.log(action);
-
   const getMouseEventProps = useCallback(
     (e: React.MouseEvent) => {
       const { clientX, clientY, movementX, movementY, buttons } = e;
@@ -43,12 +48,18 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
       const id = element.getAttribute("id") || undefined;
       const side = element.getAttribute("data-side") as ElementSide | undefined;
 
+      const type = element.parentElement?.getAttribute("data-type") as
+        | ElementCategory["type"]
+        | undefined;
+
       const [mx, my] = [movementX / frame.scale, movementY / frame.scale];
       const { x, y } = getScaledCoordinates({ x: clientX, y: clientY });
 
       return {
         id,
         side,
+        type,
+        target: element,
         position: { x, y },
         movement: { mx, my },
         pressedButton: buttons,
@@ -81,27 +92,45 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
     [action, elementsHandler]
   );
 
-  const renderElementsBasedOnTheirTypes = useCallback(
+  const renderElementByTheirType = useCallback(
     (element: ElementCategory, asPreview?: boolean) => {
-      const { type } = element;
+      switch (element.type) {
+        case "text":
+          return (
+            <Text
+              key={element.id}
+              showAsPreview={!!asPreview}
+              isSelected={action.targetId === element.id}
+              isEditing={
+                action.name === "edit" && action.targetId === element.id
+              }
+              element={element as ApplicationElements.Text}
+              saveTextHandler={(data: string) =>
+                elementsHandler.update(element.id).data().text(data)
+              }
+            />
+          );
+          break;
 
-      if (type === "circle" || type === "square") {
-        return (
-          <Shape
-            key={element.id}
-            showAsPreview={!!asPreview}
-            {...(element as ShapeInterface)}
-            isSelected={action.targetId === element.id}
-          />
-        );
+        default:
+          return (
+            <Shape
+              key={element.id}
+              showAsPreview={!!asPreview}
+              isSelected={action.targetId === element.id}
+              element={element as ApplicationElements.Shape}
+            />
+          );
+          break;
       }
     },
-    [action]
+    [action, elementsHandler]
   );
 
   const onMouseDownHandler: React.MouseEventHandler<HTMLElement> = useCallback(
     (e) => {
       const { id, side, position, pressedButton } = getMouseEventProps(e);
+
       if (!id) return;
 
       switch (pressedButton) {
@@ -110,16 +139,28 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
           break;
 
         case MouseButtons.left:
-          if (action.name === "create")
-            createElementFromToolBoxSelection(position.x, position.y);
+          switch (action.name) {
+            case "create":
+              createElementFromToolBoxSelection(position.x, position.y);
+              break;
 
-          if (action.name === "select" && !side)
-            id !== action.targetId
-              ? actionHandler.selectElement(id)
-              : actionHandler.grabElement(id);
+            case "select":
+              if (!side)
+                id !== action.targetId
+                  ? actionHandler.selectElement(id)
+                  : actionHandler.grabElement(id);
 
-          if (action.name === "select" && action.targetId && side)
-            actionHandler.resizeElement(action.targetId, side);
+              if (action.targetId && side)
+                actionHandler.resizeElement(action.targetId, side);
+              break;
+
+            case "edit":
+              if (id !== action.targetId && !side)
+                actionHandler.selectElement(id);
+              if (action.targetId && side)
+                actionHandler.resizeElement(action.targetId, side);
+              break;
+          }
           break;
       }
     },
@@ -144,25 +185,35 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
           break;
 
         case MouseButtons.left:
-          if (action.name === "create")
-            elementsHandler.updatePreviewElementSize(movement.mx, movement.my);
+          switch (action.name) {
+            case "grab":
+              if (!action.targetId) return;
 
-          if (action.name === "select")
-            actionHandler.grabElement(action.targetId);
+              action.targetId === "frame" || action.targetId === "board"
+                ? updateFrame.position(rawMovement.mx, rawMovement.my)
+                : elementsHandler
+                    .update(action.targetId)
+                    .position(movement.mx, movement.my);
+              break;
 
-          if (!action.targetId) return;
+            case "select":
+              actionHandler.grabElement(action.targetId);
+              break;
 
-          if (action.name === "grab")
-            ["frame", "board"].includes(action.targetId)
-              ? updateFrame.position(rawMovement.mx, rawMovement.my)
-              : elementsHandler
-                  .update(action.targetId)
-                  ?.position(movement.mx, movement.my);
+            case "create":
+              elementsHandler.updatePreviewElementSize(
+                movement.mx,
+                movement.my
+              );
+              break;
 
-          if (action.name === "resize")
-            elementsHandler
-              .update(action.targetId)
-              ?.size(movement.mx, movement.my, action.elementSide);
+            case "resize":
+              if (!action.targetId) return;
+              elementsHandler
+                .update(action.targetId)
+                .size(movement.mx, movement.my, action.elementSide);
+              break;
+          }
           break;
       }
     },
@@ -172,18 +223,37 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
   const onMouseUpHandler: React.MouseEventHandler<HTMLElement> = useCallback(
     (e) => {
       const { id } = getMouseEventProps(e);
+
       if (!id) return;
 
-      if (action.name === "grab" || action.name === "resize")
-        actionHandler.returnToPrevious();
+      switch (action.name) {
+        case "create":
+          elementsHandler.save();
+          action.toolBoxSelection === "text"
+            ? actionHandler.editElement(id)
+            : actionHandler.selectElement(id);
+          break;
 
-      if (action.name === "create") {
-        elementsHandler.save();
-        actionHandler.selectElement(previewElement?.id);
+        case "grab":
+        case "resize":
+          actionHandler.returnToPrevious();
+          break;
       }
     },
-    [action, actionHandler, previewElement, elementsHandler, getMouseEventProps]
+    [action, actionHandler, elementsHandler, getMouseEventProps]
   );
+
+  const onDoubleClickHandler: React.MouseEventHandler<HTMLElement> =
+    useCallback(
+      (e) => {
+        const { id, type } = getMouseEventProps(e);
+
+        if (!id || action.name === "edit" || type !== "text") return;
+
+        actionHandler.editElement(id);
+      },
+      [getMouseEventProps, actionHandler, action]
+    );
 
   return (
     <div
@@ -191,13 +261,13 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
       onMouseDown={onMouseDownHandler}
       onMouseMove={onMouseMoveHandler}
       onMouseUp={onMouseUpHandler}
+      onDoubleClick={onDoubleClickHandler}
       onWheel={(e) => updateFrame.scale(e.deltaY)}
       className="h-full w-full select-none overflow-hidden"
       style={{
-        cursor: action.cursor,
         backgroundImage: `radial-gradient(${colorPallete[backgroundColor].light} 1.5px, ${colorPallete[backgroundColor].lighter}50 1.5px)`,
         backgroundSize: `60px 60px`,
-        opacity: 1,
+        cursor: action.cursor,
       }}
     >
       <div
@@ -207,10 +277,8 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
           transform: `translate(${frame.position.x}px, ${frame.position.y}px) scale(${frame.scale})`,
         }}
       >
-        {elements.map((element) => renderElementsBasedOnTheirTypes(element))}
-
-        {previewElement &&
-          renderElementsBasedOnTheirTypes(previewElement, true)}
+        {elements.map((element) => renderElementByTheirType(element))}
+        {previewElement && renderElementByTheirType(previewElement, true)}
       </div>
 
       <ToolBox

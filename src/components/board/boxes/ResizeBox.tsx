@@ -1,4 +1,4 @@
-import { ApplicationColor, ApplicationStyles } from "@/application";
+import { ApplicationColor, ApplicationStyles } from "@/lib/types";
 
 type ResizeBoxProps = {
   id: string;

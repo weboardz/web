@@ -2,8 +2,9 @@ import {
   ApplicationAction,
   ApplicationColor,
   ToolBoxOption,
-  colorPallete,
-} from "@/application";
+} from "@/lib/types";
+
+import { colorPallete } from "@/lib/constants";
 
 import {
   Circle,
@@ -56,7 +57,7 @@ const ToolBox = ({
   selectToolBoxOption,
 }: ToolBoxProps) => {
   return (
-    <nav className="absolute left-1/2 top-14 flex -translate-x-1/2 items-center gap-4 rounded-md bg-Alabaster-50 px-3 py-2 opacity-75 shadow-md transition hover:scale-105 hover:opacity-100">
+    <nav className="absolute left-1/2 top-14 flex -translate-x-1/2 items-center gap-4 rounded-md bg-white px-3 py-2 opacity-75 shadow-md transition hover:scale-105 hover:opacity-100">
       {toolBoxButtons.map(({ icon, name }) => {
         return (
           <Button
@@ -157,13 +158,13 @@ const Button = ({
       className="group/button relative flex h-10 w-10 items-center justify-center rounded-md transition hover:scale-110 hover:bg-AliceBlue-100 hover:shadow-sm"
       style={{
         backgroundColor: isSelected
-          ? colorPallete.Alabaster.lighter
+          ? colorPallete.BlackHaze.lighter
           : undefined,
       }}
     >
       {cloneElement(icon, {
         size: 25,
-        className: "text-Alabaster-500 group-hover/button:text-AliceBlue-700",
+        className: "text-BlackHaze-600 group-hover/button:text-AliceBlue-700",
       })}
 
       {children}

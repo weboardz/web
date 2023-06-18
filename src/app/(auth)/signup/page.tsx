@@ -2,7 +2,7 @@
 
 import { ArrowLink, Input, InputProps, Submit } from "@/components";
 import { api } from "@/config";
-import { convertFormDataToObject } from "@/lib";
+import { convertFormDataToObject } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 

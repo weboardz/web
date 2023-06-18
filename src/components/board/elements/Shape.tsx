@@ -1,42 +1,33 @@
-import { Shape as ShapeInterface } from "@/application";
-import { ResizeBox } from "../boxes";
+import { ApplicationElements } from "@/lib/types";
+import { ElementContainer } from "./ElementContainer";
 
-type ShapeProps = ShapeInterface & {
+type ShapeProps = {
   key?: string;
   isSelected: boolean;
   showAsPreview: boolean;
+  element: ApplicationElements.Shape;
 };
 
 const Shape = ({
-  id,
-  size,
-  color,
+  element,
   isSelected,
-  borderWidth,
-  borderRadius,
-  startPosition,
   showAsPreview,
+  element: { id, color, borderRadius, borderWidth },
 }: ShapeProps) => {
   return (
-    <div
-      id={id}
-      className="absolute flex origin-top-left select-none items-center justify-center transition-shadow hover:shadow-md"
-      style={{
-        backgroundColor: color.lighter,
-        borderColor: color.main,
-        color: color.dark,
-        transform: `translate(${startPosition.x}px, ${startPosition.y}px)`,
-        width: size.width,
-        height: size.height,
-        borderWidth,
-        borderRadius,
-        zIndex: showAsPreview ? 10 : 0,
-      }}
-    >
-      {(isSelected || showAsPreview) && (
-        <ResizeBox {...{ id, size, color }} showResizeNodes={!showAsPreview} />
-      )}
-    </div>
+    <ElementContainer {...{ isSelected, showAsPreview }} elementProps={element}>
+      <div
+        {...{ id }}
+        className="flex h-full w-full select-none items-center justify-center transition-shadow hover:shadow-md"
+        style={{
+          backgroundColor: color.lighter,
+          borderColor: color.main,
+          color: color.dark,
+          borderRadius,
+          borderWidth,
+        }}
+      />
+    </ElementContainer>
   );
 };
 
