@@ -7,7 +7,7 @@ import {
   OAuthButton,
   Submit,
 } from "@/components";
-import { convertFormDataToObject } from "@/lib";
+import { convertFormDataToObject } from "@/lib/utils";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
