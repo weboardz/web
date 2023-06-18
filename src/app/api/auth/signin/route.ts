@@ -1,4 +1,4 @@
-import { api } from "@/lib";
+import { api } from "@/config";
 import { NextRequest } from "next/server";
 
 const POST = async (request: NextRequest) => {
