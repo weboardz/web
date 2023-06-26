@@ -1,3 +1,4 @@
+import BlurBackground from "@/assets/blur-background.svg";
 import Logo from "@/assets/logo.svg";
 import WeBoard from "@/assets/typography.svg";
 import { ChevronRight } from "lucide-react";
@@ -7,6 +8,11 @@ import Link from "next/link";
 const LandingPage = () => {
   return (
     <>
+      <Image
+        alt=""
+        src={BlurBackground}
+        className="top-o absolute right-0 -z-10 max-h-[80%] w-auto"
+      />
       <header className="flex w-full items-center justify-between text-xl text-BlackHaze-800">
         <div className="flex gap-8">
           <Image src={Logo} alt="Logo" />
