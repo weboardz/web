@@ -1,4 +1,5 @@
 import { Globe, Lock, Share2, Trash2, Users2 } from "lucide-react";
+import Link from "next/link";
 import { cloneElement } from "react";
 
 const [oneMinute, oneHourInMinutes, oneDayInMinutes] = [1, 60, 60 * 24];
@@ -81,9 +82,13 @@ const Card = ({ id, name, updatedAt, type, setDeleteId }: CardProps) => {
 
       <div className="absolute bottom-0 flex h-16 w-full items-center justify-between bg-Alabaster-50 px-4">
         <div className="flex w-9/12 flex-col justify-center">
-          <p className="overflow-hidden text-ellipsis text-lg font-medium text-Alabaster-800">
+          <Link
+            target="_blank"
+            href={`/board/${id}`}
+            className="overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium text-Alabaster-800 hover:underline"
+          >
             {name}
-          </p>
+          </Link>
           <p className="text-sm text-Alabaster-300">
             {createLastTimeEditedMessage(updatedAt)}
           </p>
