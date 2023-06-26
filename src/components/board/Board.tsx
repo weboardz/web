@@ -6,12 +6,13 @@ import {
   ApplicationStyles,
   ElementCategory,
   ElementSide,
+  WsMessage,
 } from "@/lib/types";
 
 import { colorPallete } from "@/lib/constants";
 
 import { useAction, useControls, useElements } from "@/hooks";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 import { ToolBox } from "./boxes";
 import { Shape, Text } from "./elements";
@@ -31,14 +32,53 @@ const initialAction: ApplicationAction = {
 };
 
 type BoardProps = {
-  backgroundColor: keyof typeof colorPallete;
+  asViewer: boolean;
+  socket?: WebSocket;
   showCoordinates?: boolean;
+  initialData: ElementCategory[];
+  backgroundColor: keyof typeof colorPallete;
 };
 
-const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
-  const { elements, previewElement, elementsHandler } = useElements([]);
+const Board = ({
+  socket,
+  asViewer,
+  initialData,
+  backgroundColor,
+  showCoordinates = true,
+}: BoardProps) => {
+  const { elements, previewElement, elementsHandler, setElementsHandler } =
+    useElements([]);
   const { frame, updateFrame, getScaledCoordinates } = useControls();
   const { action, actionHandler } = useAction(initialAction);
+
+  console.log("Reloads count");
+
+  useEffect(() => {
+    setElementsHandler.set(initialData);
+    //eslint-disable-next-line
+  }, [initialData]);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.addEventListener("message", (event) => {
+      if (event.data === "Could not process message") {
+        return;
+      }
+      const message = JSON.parse(event.data) as WsMessage;
+      try {
+        const element = JSON.parse(message.data) as ElementCategory;
+
+        switch (message.operation) {
+          case "update":
+          case "create":
+            setElementsHandler.add(element);
+            break;
+          case "delete":
+            break;
+        }
+      } catch (error) {}
+    });
+  }, [socket, setElementsHandler]);
 
   const getMouseEventProps = useCallback(
     (e: React.MouseEvent) => {
@@ -145,7 +185,7 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
               break;
 
             case "select":
-              if (!side)
+              if (!side && !asViewer)
                 id !== action.targetId
                   ? actionHandler.selectElement(id)
                   : actionHandler.grabElement(id);
@@ -169,6 +209,7 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
       getMouseEventProps,
       actionHandler,
       action,
+      asViewer,
     ]
   );
 
@@ -177,7 +218,7 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
       const { id, movement, pressedButton, rawMovement } =
         getMouseEventProps(e);
 
-      if (!id) return;
+      if (!id || !socket) return;
 
       switch (pressedButton) {
         case MouseButtons.wheel:
@@ -194,6 +235,23 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
                 : elementsHandler
                     .update(action.targetId)
                     .position(movement.mx, movement.my);
+
+              if (
+                action.targetId &&
+                action.targetId !== "frame" &&
+                action.targetId !== "board"
+              ) {
+                const element = elementsHandler.get(action.targetId);
+                if (!element) return;
+                socket.send(
+                  JSON.stringify({
+                    id: element.id,
+                    data: JSON.stringify(element),
+                    operation: "update",
+                    save: false,
+                  })
+                );
+              }
               break;
 
             case "select":
@@ -212,22 +270,53 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
               elementsHandler
                 .update(action.targetId)
                 .size(movement.mx, movement.my, action.elementSide);
+              if (
+                action.targetId &&
+                action.targetId !== "frame" &&
+                action.targetId !== "board"
+              ) {
+                const element = elementsHandler.get(action.targetId);
+                if (!element) return;
+                socket.send(
+                  JSON.stringify({
+                    id: element.id,
+                    data: JSON.stringify(element),
+                    operation: "update",
+                    save: false,
+                  })
+                );
+              }
               break;
           }
           break;
       }
     },
-    [getMouseEventProps, action, updateFrame, elementsHandler, actionHandler]
+    [
+      getMouseEventProps,
+      socket,
+      action,
+      updateFrame,
+      elementsHandler,
+      actionHandler,
+    ]
   );
 
   const onMouseUpHandler: React.MouseEventHandler<HTMLElement> = useCallback(
     (e) => {
       const { id } = getMouseEventProps(e);
 
-      if (!id) return;
+      if (!id || !socket) return;
 
       switch (action.name) {
         case "create":
+          socket.send(
+            JSON.stringify({
+              id: previewElement?.id,
+              data: JSON.stringify(previewElement),
+              operation: "create",
+              save: true,
+            })
+          );
           elementsHandler.save();
           action.toolBoxSelection === "text"
             ? actionHandler.editElement(id)
@@ -236,11 +325,34 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
 
         case "grab":
         case "resize":
+          if (
+            action.targetId &&
+            action.targetId !== "frame" &&
+            action.targetId !== "board"
+          ) {
+            const element = elementsHandler.get(action.targetId);
+            if (!element) return;
+            socket.send(
+              JSON.stringify({
+                id: element.id,
+                data: JSON.stringify(element),
+                operation: "update",
+                save: true,
+              })
+            );
+          }
           actionHandler.returnToPrevious();
           break;
       }
     },
-    [action, actionHandler, elementsHandler, getMouseEventProps]
+    [
+      action,
+      previewElement,
+      socket,
+      actionHandler,
+      elementsHandler,
+      getMouseEventProps,
+    ]
   );
 
   const onDoubleClickHandler: React.MouseEventHandler<HTMLElement> =
@@ -281,15 +393,17 @@ const Board = ({ backgroundColor, showCoordinates = true }: BoardProps) => {
         {previewElement && renderElementByTheirType(previewElement, true)}
       </div>
 
-      <ToolBox
-        {...{ action }}
-        selectToolBoxColor={(color) => actionHandler.selectColor(color)}
-        selectToolBoxOption={(option) => {
-          option === "cursor"
-            ? actionHandler.selectElement()
-            : actionHandler.createElement(option);
-        }}
-      />
+      {!asViewer && (
+        <ToolBox
+          {...{ action }}
+          selectToolBoxColor={(color) => actionHandler.selectColor(color)}
+          selectToolBoxOption={(option) => {
+            option === "cursor"
+              ? actionHandler.selectElement()
+              : actionHandler.createElement(option);
+          }}
+        />
+      )}
 
       {showCoordinates && (
         <span className="absolute bottom-2 right-2 font-mono text-xs text-Alabaster-500">

@@ -25,6 +25,9 @@ const useElements = (initialElements: ElementsArray) => {
 
   const setElementsHandler = useMemo(() => {
     return {
+      set: (elements: ElementCategory[]) => {
+        setElements(convertElementsArrayToMap(elements));
+      },
       add: (element: ElementCategory) => {
         setElements(new Map(elements.set(element.id, element)));
       },
@@ -101,6 +104,8 @@ const useElements = (initialElements: ElementsArray) => {
     const remove = (id: string) => {
       setElementsHandler.remove(id);
     };
+
+    const get = (id: string) => elements.get(id);
 
     const update = (id: string) => {
       const targetElement = elements.get(id);
@@ -190,12 +195,13 @@ const useElements = (initialElements: ElementsArray) => {
       });
     };
 
-    return { create, save, remove, update, updatePreviewElementSize };
+    return { create, get, save, remove, update, updatePreviewElementSize };
   }, [elements, previewElement, setElementsHandler]);
 
   return {
     previewElement,
     elementsHandler,
+    setElementsHandler,
     elements: convertElementsMapToArray(elements),
   };
 };
