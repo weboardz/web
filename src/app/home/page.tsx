@@ -1,21 +1,18 @@
 "use client";
 
 import { FilePlus2, LogOut } from "lucide-react";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Card, Logo } from "@/components";
 import { useBoardApi } from "@/hooks";
 import { convertFormDataToObject } from "@/lib/utils";
 
-const logOut = () => {
-  document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-  return redirect("/signin");
-};
-
 const Home = () => {
   const [deleteId, setDeleteId] = useState<string>();
   const [create, setCreate] = useState(false);
+
+  const router = useRouter();
 
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -42,7 +39,11 @@ const Home = () => {
         <div className="flex gap-4">
           <button
             className="group/logout flex items-center gap-2 font-medium text-white hover:underline"
-            onClick={logOut}
+            onClick={() => {
+              document.cookie =
+                "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+              router.push("/signin");
+            }}
           >
             <LogOut /> Log out
           </button>
