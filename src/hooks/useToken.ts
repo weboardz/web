@@ -1,16 +1,10 @@
-import { useEffect, useRef } from "react";
-
 const useToken = () => {
-  const config = useRef<{ headers: { Authorization: string } }>();
-
-  useEffect(() => {
+  if (typeof document !== "undefined") {
     const token = document.cookie.replace("token=", "");
-    config.current = token
+    return token
       ? { headers: { Authorization: `Bearer ${token}` } }
       : undefined;
-  }, []);
-
-  return config.current;
+  }
 };
 
 export { useToken };
