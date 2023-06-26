@@ -7,7 +7,7 @@ import {
 } from "@/lib/types";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePrevious } from "./usePrevious";
+import { usePrevious } from "../usePrevious";
 
 const useAction = (initialAction: ApplicationAction) => {
   const [action, setAction] = useState(initialAction);
